@@ -1,0 +1,16 @@
+NestJS:
+
+Nest tiene un consola que te ayuda a crear los recursos, dependenacias, etc y es utilizando:
+
+nest --help
+
+para que nest no me tire errores constantes a la hora de codificar puedo poner este codigo: 
+
+"prettier/prettier": [
+    "error",
+    {
+      "endoOfline" : "auto"
+    }
+
+]
+
