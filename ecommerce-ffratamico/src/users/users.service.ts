@@ -7,18 +7,18 @@ import { UserRepository } from './users.repository';
 export class UsersService {
   constructor(private readonly userRepository: UserRepository){}
 
+  GetAll() {   
+    return this.userRepository.getUsers();
+  }
+  
+  GetUSerById(id: number) {
+    return this.userRepository.getById(id);
+  }
+
   create(createUserDto: CreateUserDto) {
     return 'This action adds a new user';
   }
-
-  findAll() {   
-    return this.userRepository.getUsers();
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
+  
   update(id: number, updateUserDto: UpdateUserDto) {
     return `This action updates a #${id} user`;
   }

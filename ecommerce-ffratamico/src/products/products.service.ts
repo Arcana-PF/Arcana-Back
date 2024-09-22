@@ -5,7 +5,7 @@ import { ProductsRepository } from './products.repository';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly productsRepository: ProductsRepository){}
+  constructor(private readonly productsRepository: ProductsRepository) { }
 
   create(createProductDto: CreateProductDto) {
     return 'This action adds a new product';
@@ -13,7 +13,7 @@ export class ProductsService {
 
   findAll() {
     return this.productsRepository.getProducts();
-  } 
+  }
 
   findOne(id: number) {
     return `This action returns a #${id} product`;
