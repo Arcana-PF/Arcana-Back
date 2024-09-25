@@ -1,5 +1,5 @@
 interface UserDTO {
-  id: number;
+  id: string;
 
   email: string;
 
@@ -9,7 +9,7 @@ interface UserDTO {
 
   address: string;
 
-  phone: string;
+  phone: number;
 
   country?: string | undefined;
 
