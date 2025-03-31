@@ -14,3 +14,4 @@ para que nest no me tire errores constantes a la hora de codificar puedo poner e
 
 ]
 
+iniciar el proyecto: npm run start:dev

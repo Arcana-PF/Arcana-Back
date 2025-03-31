@@ -3,31 +3,44 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   Res,
   Put,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Response } from 'express';
+import { CreateUserDTO } from './dto/create-user.dto';
+import { UpdateUserDTO } from './dto/update-user.dto';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  GetAll(@Res() response: Response) {
-    response.status(200).send(this.usersService.GetAll());
+  @UseGuards(AuthGuard)
+  getAllUsers(@Res() response: Response) {
+    response.status(200).send(this.usersService.getAll());
+  }
+
+  @Get('page')
+  getUsersWithPagination(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 5,
+  ) {
+    return this.usersService.getUsersWithPagination(page, limit);
   }
 
   @Get(':id')
-  GetUserById(@Param('id') id: string, @Res() response: Response) {
-    response.status(200).send(this.usersService.GetUSerById(id));
+  getUserById(@Param('id') id: string, @Res() response: Response) {
+    response.status(200).send(this.usersService.getUserById(id));
   }
 
   @Post()
-  createUser(@Body() newUser: CreaateUserDTO, @Res() response: Response) {
+  createUser(@Body() newUser: CreateUserDTO, @Res() response: Response) {
     response.status(201).send(this.usersService.createUser(newUser));
   }
 
@@ -36,8 +49,12 @@ export class UsersController {
     response.status(200).send(this.usersService.deleteUser(id));
   }
 
-  @Put(":id")
-  updateUser(@Param("id") id: string, @Body() updateUser: UpdateUserDTO, @Res() response: Response){
-    response.status(200).send(this.usersService.updateUser(id, updateUser))
+  @Put(':id')
+  updateUser(
+    @Param('id') id: string,
+    @Body() updateUser: UpdateUserDTO,
+    @Res() response: Response,
+  ) {
+    response.status(200).send(this.usersService.updateUser(id, updateUser));
   }
 }

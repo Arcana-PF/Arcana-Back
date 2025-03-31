@@ -7,16 +7,20 @@ import { ProductsRepository } from './products.repository';
 export class ProductsService {
   constructor(private readonly productsRepository: ProductsRepository) { }
 
-  create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product';
-  }
-
-  findAll() {
+  getAll() {
     return this.productsRepository.getProducts();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  getProductsWithPagination(page: number, limit: number) {
+    return this.productsRepository.getProductsWithPagination(page, limit);
+  }
+
+  getProductById(id: string) {
+    return this.productsRepository.getProductById(id);
+  }
+
+  createProduct(newProduct: CreateProductDto) {
+    return this.productsRepository.createProduct(newProduct);
   }
 
   update(id: number, updateProductDto: UpdateProductDto) {

@@ -1,17 +1,28 @@
-interface UserDTO {
+import { IsEmail, IsString, IsOptional } from 'class-validator';
+
+export class UserDTO {
   id: string;
 
+  @IsEmail()
   email: string;
 
+  @IsString()
   name: string;
 
+  @IsString()
   password: string;
 
+  @IsString()
   address: string;
 
-  phone: number;
+  @IsString()
+  phone: string;
 
-  country?: string | undefined;
+  @IsString()
+  @IsOptional()
+  country?: string;
 
-  city?: string | undefined;
+  @IsString()
+  @IsOptional()
+  city?: string;
 }

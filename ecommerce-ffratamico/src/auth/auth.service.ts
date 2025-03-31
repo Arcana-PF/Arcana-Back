@@ -1,26 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { SignInAuthDTO } from './dto/signin-auth.dto';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
-  }
+  constructor(private readonly userService: UsersService) {}
 
-  findAll() {
-    return `This action returns all auth`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
-  }
+  async logIn(credentials: SignInAuthDTO) {
+        // Verificar que ambas credenciales estén presentes
+        if (!credentials.email || !credentials.password) {
+            throw { message: 'Email y contraseña son requeridos.' };
+        }
+    
+        // Buscar el usuario por email
+        const user = await this.userService.findOneByEmail(credentials.email);
+    
+        // Si el usuario no existe o la contraseña no coincide
+        if (!user || user.password !== credentials.password) {
+          throw { message: 'Email o contraseña incorrectos.' };
+        }
+    
+        // Si las credenciales son correctas
+        return { message: 'Sesión iniciada correctamente' };
+    }
 }
