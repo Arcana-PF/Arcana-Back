@@ -23,11 +23,12 @@ export class ProductsService {
     return this.productsRepository.createProduct(newProduct);
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  removeProduct(id: string) {
+      return this.productsRepository.deleteProduct(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+  update(id: string, updateProduct: UpdateProductDto) {
+    return this.productsRepository.updateProduct(id, updateProduct);
   }
+
 }

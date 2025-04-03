@@ -16,6 +16,6 @@ export class ProductDTO {
     @IsBoolean()
     stock: boolean;
     
-     @IsString()
+    @IsString()
     imgUrl: string;
 }

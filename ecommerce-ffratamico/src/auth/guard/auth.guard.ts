@@ -9,24 +9,20 @@ export class AuthGuard implements CanActivate {
     
     const authHeader = request.headers['authorization'];
     
-    // Verificamos si el header de autorización existe
     if (!authHeader) {
+      throw new UnauthorizedException('Email o password incorrectos'); // Verificamos si el header de autorización existe
+    }
+
+    const [basic, credentials] = authHeader.split(' '); // Verificamos si el formato es correcto (debe comenzar con "Basic")
+    if (basic !== 'Basic' || !credentials) { 
       throw new UnauthorizedException('Email o password incorrectos');
     }
 
-    // Verificamos si el formato es correcto (debe comenzar con "Basic")
-    const [basic, credentials] = authHeader.split(' ');
-    if (basic !== 'Basic' || !credentials) {
-      throw new UnauthorizedException('Email o password incorrectos');
-    }
-
-    // Verificamos si el formato es "Basic: email:password"
-    const [email, password] = credentials.split(':');
+    const [email, password] = credentials.split(':'); // Verificamos que el formato es "Basic: email:password"
     if (!email || !password) {
       throw new UnauthorizedException('Email o password incorrectos');
     }
 
-    // Todo está bien, se permite el acceso
     return true;
   }
 }

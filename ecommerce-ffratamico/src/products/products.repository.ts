@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { v4 } from 'uuid';
 import { ProductDTO } from './dto/product-dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductsRepository {
@@ -52,4 +53,19 @@ export class ProductsRepository {
     this.products.push(newProduct);
     return id;
   }
+
+  deleteProduct(id: string) {
+    this.products = this.products.filter(product => product.id !== id)
+    return id;
+  }
+
+  updateProduct(id: string, updateProduct: UpdateProductDto) {
+    const productIndex = this.products.findIndex(product => product.id === id);
+    if (productIndex === -1) return null;
+
+    const updateProductIndex = {...this.products[productIndex], ...updateProduct};
+    this.products[productIndex] = updateProductIndex;
+    return id;
+  }
+
 }

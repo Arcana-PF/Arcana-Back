@@ -1,26 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { SignInAuthDTO } from './dto/signin-auth.dto';
-import { UsersService } from 'src/users/users.service';
+import { UserRepository } from 'src/users/users.repository';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly userService: UsersService) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
   async logIn(credentials: SignInAuthDTO) {
-        // Verificar que ambas credenciales estén presentes
-        if (!credentials.email || !credentials.password) {
-            throw { message: 'Email y contraseña son requeridos.' };
-        }
-    
-        // Buscar el usuario por email
-        const user = await this.userService.findOneByEmail(credentials.email);
-    
-        // Si el usuario no existe o la contraseña no coincide
-        if (!user || user.password !== credentials.password) {
-          throw { message: 'Email o contraseña incorrectos.' };
-        }
-    
-        // Si las credenciales son correctas
-        return { message: 'Sesión iniciada correctamente' };
+    const { email, password } = credentials;
+
+    if (!email || !password) {
+      throw new BadRequestException('Email y contraseña son requeridos.');
     }
+
+    const user = await this.userRepository.findOneByEmail(email);
+
+    if (!user || user.password !== password) {
+      throw new UnauthorizedException('Email o contraseña incorrectos.'); //Mensaje de seguridad en caso de escribir algun dato mal
+    }
+
+    return { message: 'Sesión iniciada correctamente'}; //mensaje de confirmacion
+  }
 }

@@ -73,8 +73,8 @@ export class UserRepository{
         const userIndex = this.users.findIndex(user => user.id === id);
         if (userIndex === -1) return null;
 
-        const updatedUser = { ...this.users[userIndex], ...updateUser };
-        this.users[userIndex] = updatedUser;
+        const updateUserIndex = { ...this.users[userIndex], ...updateUser };
+        this.users[userIndex] = updateUserIndex;
         return id;
     }
 

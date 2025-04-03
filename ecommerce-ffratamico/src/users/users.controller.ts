@@ -21,12 +21,13 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard) // Header de autorizacion
   getAllUsers(@Res() response: Response) {
     response.status(200).send(this.usersService.getAll());
   }
 
   @Get('page')
+  @UseGuards(AuthGuard) // Header de autorizacion
   getUsersWithPagination(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 5,
@@ -35,6 +36,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard) // Header de autorizacion
   getUserById(@Param('id') id: string, @Res() response: Response) {
     response.status(200).send(this.usersService.getUserById(id));
   }
@@ -45,11 +47,13 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard) // Header de autorizacion
   deleteUser(@Param('id') id: string, @Res() response: Response) {
     response.status(200).send(this.usersService.deleteUser(id));
   }
 
   @Put(':id')
+  @UseGuards(AuthGuard) // Header de autorizacion
   updateUser(
     @Param('id') id: string,
     @Body() updateUser: UpdateUserDTO,
