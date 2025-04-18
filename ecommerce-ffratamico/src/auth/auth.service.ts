@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { SignInAuthDTO } from './dto/signin-auth.dto';
 import { UserRepository } from 'src/users/users.repository';
 
@@ -8,10 +8,6 @@ export class AuthService {
 
   async logIn(credentials: SignInAuthDTO) {
     const { email, password } = credentials;
-
-    if (!email || !password) {
-      throw new BadRequestException('Email y contraseña son requeridos.');
-    }
 
     const user = await this.userRepository.findOneByEmail(email);
 

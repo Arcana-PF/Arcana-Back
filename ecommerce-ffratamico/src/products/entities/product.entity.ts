@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Category } from "./categories.entity";
-import { OrderDetail } from "./orderDetail.entity";
+import { Category } from "src/categories/entities/categories.entity";
+import { OrderDetail } from "src/orders/entities/orderDetail.entity";
 
 @Entity({
   name: 'products'
@@ -21,7 +21,7 @@ export class Product {
   @Column('int', {nullable: false})
   stock: number;
 
-  @Column('text', {default: 'https://miapp.com/default-image.png'})
+  @Column('text', {default: 'imagne por defecto'})
   imgUrl: string;
 
   @ManyToOne(() => Category, (category) => category.products, { nullable: false })

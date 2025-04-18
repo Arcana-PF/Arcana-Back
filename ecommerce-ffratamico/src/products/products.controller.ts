@@ -4,44 +4,50 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Response } from 'express';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { IdParamDTO } from 'src/Id-Param.DTO';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  getAllProducts(@Res() response: Response) {
-    response.status(200).send(this.productsService.getAll());
+  async getAllProducts() {
+    return await this.productsService.getAll();
   }
 
   @Get('page')
-    getUsersWithPagination(
+    async getUsersWithPagination(
       @Query('page') page: number = 1,
       @Query('limit') limit: number = 5,
     ) {
-      return this.productsService.getProductsWithPagination(page, limit);
+      return await this.productsService.getProductsWithPagination(page, limit);
     }
 
   @Get(':id')
-  getProductById(@Param('id') id: string, @Res() response: Response) {
-    response.status(200).send(this.productsService.getProductById(id));
+  async getProductById(@Param() param: IdParamDTO) {
+    return await this.productsService.getProductById(param.id);
   }
 
   @Post()
   @UseGuards(AuthGuard) // Header de autorizacion
-  create(@Body() newProduct: CreateProductDto, @Res() response: Response) {
-    response.status(201).send(this.productsService.createProduct(newProduct));
+  async create(@Body() newProduct: CreateProductDto) {
+    return await this.productsService.createProduct(newProduct);
+  }
+
+  @Post('seeder')
+  async addProductsSeeder(){
+    return await this.productsService.addProductsSeeder();
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard) // Header de autorizacion
-  remove(@Param('id') id: string,@Res() response: Response) {
-    response.status(200).send(this.productsService.removeProduct(id));
+  async remove(@Param() param: IdParamDTO) {
+    return await this.productsService.removeProduct(param.id);
   }
 
   @Put(':id')
   @UseGuards(AuthGuard) // Header de autorizacion
-  update(@Param('id') id: string, @Body() updateProduct: UpdateProductDto, @Res() response: Response) {
-    response.status(200).send(this.productsService.update(id, updateProduct))
+  async update(@Param() param: IdParamDTO, @Body() updateProduct: UpdateProductDto) {
+    return await this.productsService.update(param.id, updateProduct)
   }
 }

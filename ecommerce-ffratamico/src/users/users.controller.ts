@@ -5,16 +5,15 @@ import {
   Body,
   Param,
   Delete,
-  Res,
   Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { Response } from 'express';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDTO } from './dto/update-user.dto';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { IdParamDTO } from 'src/Id-Param.DTO';
 
 @Controller('users')
 export class UsersController {
@@ -22,43 +21,47 @@ export class UsersController {
 
   @Get()
   @UseGuards(AuthGuard) // Header de autorizacion
-  getAllUsers(@Res() response: Response) {
-    response.status(200).send(this.usersService.getAll());
+  async getAllUsers() {
+    return await this.usersService.getAll();
   }
 
   @Get('page')
   @UseGuards(AuthGuard) // Header de autorizacion
-  getUsersWithPagination(
+  async getUsersWithPagination(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 5,
   ) {
-    return this.usersService.getUsersWithPagination(page, limit);
+    return await this.usersService.getUsersWithPagination(page, limit);
   }
 
   @Get(':id')
   @UseGuards(AuthGuard) // Header de autorizacion
-  getUserById(@Param('id') id: string, @Res() response: Response) {
-    response.status(200).send(this.usersService.getUserById(id));
+  async getUserById(@Param() param: IdParamDTO) {
+    return await this.usersService.getUserById(param.id);
+  }
+
+  @Post('seeder')
+  addUsers(){
+    return this.usersService.addUsers();
   }
 
   @Post()
-  createUser(@Body() newUser: CreateUserDTO, @Res() response: Response) {
-    response.status(201).send(this.usersService.createUser(newUser));
+  async createUser(@Body() newUser: CreateUserDTO) {
+    return await this.usersService.createUser(newUser);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard) // Header de autorizacion
-  deleteUser(@Param('id') id: string, @Res() response: Response) {
-    response.status(200).send(this.usersService.deleteUser(id));
+  async deleteUser(@Param() param: IdParamDTO) {
+    return await this.usersService.deleteUser(param.id);
   }
 
   @Put(':id')
   @UseGuards(AuthGuard) // Header de autorizacion
-  updateUser(
-    @Param('id') id: string,
+  async updateUser(
+    @Param() param: IdParamDTO,
     @Body() updateUser: UpdateUserDTO,
-    @Res() response: Response,
   ) {
-    response.status(200).send(this.usersService.updateUser(id, updateUser));
+    return await this.usersService.updateUser(param.id, updateUser);
   }
 }

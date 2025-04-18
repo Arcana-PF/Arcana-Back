@@ -5,34 +5,34 @@ import { UpdateUserDTO } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
+  
   constructor(private readonly userRepository: UserRepository) {}
-  
-  getAll() {
-    return this.userRepository.getUsers();
+
+  async addUsers(){
+    return await this.userRepository.addUsers();
   }
   
-  getUsersWithPagination(page: number, limit: number) {
-    return this.userRepository.getUsersWithPagination(page, limit);
+  async getAll() {
+    return await this.userRepository.getUsers();
+  }
+  
+  async getUsersWithPagination(page: number, limit: number) {
+    return await this.userRepository.getUsersWithPagination(page, limit);
   }
 
-  getUserById(id: string) {
-    return this.userRepository.getById(id);
+  async getUserById(id: string) {
+    return await this.userRepository.getById(id);
   }
   
-  createUser(newUser: CreateUserDTO) {
-    return this.userRepository.createUser(newUser);
+  async createUser(newUser: CreateUserDTO) {
+    return await this.userRepository.createUser(newUser);
   }
   
-  deleteUser(id: string) {
-    return this.userRepository.deleteUser(id);
+  async deleteUser(id: string) {
+    return await this.userRepository.deleteUser(id);
   }
   
-  updateUser(id: string, updateUser: UpdateUserDTO) {
-    return this.userRepository.updateUser(id, updateUser)
+  async updateUser(id: string, updateUser: UpdateUserDTO) {
+    return await this.userRepository.updateUser(id, updateUser)
   }
-
-  findOneByEmail(email: string){
-    return this.userRepository.findOneByEmail(email)
-  }
-
 }

@@ -7,28 +7,32 @@ import { ProductsRepository } from './products.repository';
 export class ProductsService {
   constructor(private readonly productsRepository: ProductsRepository) { }
 
-  getAll() {
-    return this.productsRepository.getProducts();
+  async getAll() {
+    return await this.productsRepository.getProducts();
   }
 
-  getProductsWithPagination(page: number, limit: number) {
-    return this.productsRepository.getProductsWithPagination(page, limit);
+  async getProductsWithPagination(page: number, limit: number) {
+    return await this.productsRepository.getProductsWithPagination(page, limit);
   }
 
-  getProductById(id: string) {
-    return this.productsRepository.getProductById(id);
+  async getProductById(id: string) {
+    return await this.productsRepository.getProductById(id);
   }
 
-  createProduct(newProduct: CreateProductDto) {
-    return this.productsRepository.createProduct(newProduct);
+  async createProduct(newProduct: CreateProductDto) {
+    return await this.productsRepository.createProduct(newProduct);
   }
 
-  removeProduct(id: string) {
-      return this.productsRepository.deleteProduct(id);
+  async addProductsSeeder() {
+    return await this.productsRepository.addProductsSeeder();
   }
 
-  update(id: string, updateProduct: UpdateProductDto) {
-    return this.productsRepository.updateProduct(id, updateProduct);
+  async removeProduct(id: string) {
+    return await this.productsRepository.deleteProduct(id);
+  }
+
+  async update(id: string, updateProduct: UpdateProductDto) {
+    return await this.productsRepository.updateProduct(id, updateProduct);
   }
 
 }

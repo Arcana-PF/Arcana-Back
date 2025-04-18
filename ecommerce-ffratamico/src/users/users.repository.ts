@@ -1,84 +1,102 @@
-import { Injectable } from "@nestjs/common";
-import { v4 } from "uuid";
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { UpdateUserDTO } from "./dto/update-user.dto";
 import { UserDTO } from "./dto/user.dto";
+import { InjectRepository } from "@nestjs/typeorm";
+import { User } from "./entities/user.entity";
+import { Repository } from "typeorm";
 
 @Injectable()
 export class UserRepository{
-    
-    private users: UserDTO[] = [
+
+    constructor(@InjectRepository(User) private readonly repository: Repository<User>){}
+
+    private readonly mockUsers =[
         {
-            id: '1',
             email: `fausto@mail.com`,
             name: `Fausto Fratamico`,
             password: `123456`,
             address: `Falsa 123`,
-            phone: '456789',
+            phone: 456789,
             country: `Argentina`,
-            city: `springfield`
+            city: `springfield`,
+            orders: []
         },
         {
-            id: '2',
             email: `gisela@mail.com`,
             name: `Gisela torrez`,
             password: `456789`,
             address: `Falsa 345`,
-            phone: '996574',
+            phone: 996574,
             country: `Argentina`,
-            city: `shelbyville`
+            city: `shelbyville`,
+            orders: []
         },
         {
-            id: '3',
             email: `valentino@mail.com`,
             name: `Valentino Sparvoli`,
             password: `789123`,
             address: `Falsa 789`,
-            phone: '5589321',
+            phone: 5589321,
             country: `Argentina`,
-            city: `Bronson`
+            city: `Bronson`,
+            orders: []
         },
     ];
-    
-    getUsers(){
-        const users = this.users.map(({ password, ...user }) => user);       
-        return users;
+
+    async addUsers(){
+        for(const users of this.mockUsers){
+            const exists = await this.repository.findOne({where: {email: users.email}});
+            if(!exists){await this.repository.save(users)}
+        }
     }
     
-    getUsersWithPagination(page: number, limit: number) {
+    async getUsers(){
+       const users = await this.repository.find();
+       return users.map(({password, ...user}) => user);       
+    }
+    
+    async getUsersWithPagination(page: number, limit: number) {
         const startIndex = (page - 1) * limit;
         const endIndex = startIndex + limit;
-        return this.users.slice(startIndex, endIndex).map(({ password, ...user }) => user);
+        const users = await this.repository.find();
+        return users.slice(startIndex, endIndex).map(({ password, ...user }) => user);
     }
 
-    getById(id: string) {
-        return this.users.find((user) => user.id === id);
+    async getById(id: string) {
+        const user = await this.repository.findOne({where: {id}})
+        if(!user) throw new NotFoundException("El id del usuario no existe");
+        const {password, ...resto} = user;
+        return resto;
     }
     
-    createUser(user: CreateUserDTO){
-        const id = v4();
-        const newUser = {id, ...user};
-        this.users.push(newUser);
-        return id;
-
-    }
-
-    deleteUser(id: string){
-        this.users = this.users.filter(user => user.id !== id)
+    async createUser(user: CreateUserDTO){
+        const exists = await this.repository.findOne({where:{email: user.email}});
+        if(exists){throw new ConflictException('Ya existe un usuario con ese email')}
+        const newUser = this.repository.create(user);
+        await this.repository.save(newUser);
+        const {id, ...resto} = newUser;
         return id;
     }
 
-    updateUser(id: string, updateUser: UpdateUserDTO){
-
-        const userIndex = this.users.findIndex(user => user.id === id);
-        if (userIndex === -1) return null;
-
-        const updateUserIndex = { ...this.users[userIndex], ...updateUser };
-        this.users[userIndex] = updateUserIndex;
+    async deleteUser(id: string){
+        const exists = await this.repository.findOne({where:{id}});
+        if(!exists) throw new NotFoundException('el usuario no existe');
+        await this.repository.delete(id);
         return id;
     }
 
-    findOneByEmail(email: string) {
-        return this.users.find(user => user.email === email);
+    async updateUser(id: string, updateUser: UpdateUserDTO){
+        const exists = await this.repository.findOne({where:{id}})
+        if(!exists) throw new NotFoundException('el usuario no existe');
+        const updatedUser = Object.assign(exists, updateUser);
+        await this.repository.save(updatedUser);
+        return id;
+    }
+
+    async findOneByEmail(email: string) {
+        const user = await this.repository.findOne({where: {email}})
+        if(!user) return null;
+        return user;
     }
 }
