@@ -1,10 +1,10 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { UpdateUserDTO } from "./dto/update-user.dto";
-import { UserDTO } from "./dto/user.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entities/user.entity";
 import { Repository } from "typeorm";
+import { Order } from "src/orders/entities/order.entity";
 
 @Injectable()
 export class UserRepository{
@@ -64,10 +64,12 @@ export class UserRepository{
     }
 
     async getById(id: string) {
-        const user = await this.repository.findOne({where: {id}})
+        const user = await this.repository.findOne({where: {id}, relations: ['orders']})
         if(!user) throw new NotFoundException("El id del usuario no existe");
         const {password, ...resto} = user;
-        return resto;
+        const orders = user.orders.map((order) => ({id: order.id, date: order.date}));
+
+        return {resto, orders};
     }
     
     async createUser(user: CreateUserDTO){
