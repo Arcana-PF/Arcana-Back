@@ -1,17 +1,33 @@
 NestJS:
 
-Nest tiene un consola que te ayuda a crear los recursos, dependenacias, etc y es utilizando:
+- Nest tiene un consola que te ayuda a crear los recursos, dependenacias, etc y es utilizando:
 
-nest --help
+  nest --help
 
-para que nest no me tire errores constantes a la hora de codificar puedo poner este codigo: 
+- para que nest no me tire errores constantes a la hora de codificar puedo poner este codigo: 
 
-"prettier/prettier": [
-    "error",
-    {
-      "endoOfline" : "auto"
-    }
+  "prettier/prettier": [
+      "error",
+      {
+        "endoOfline" : "auto"
+      }
+    ]
 
-]
+- iniciar el proyecto: 
 
-iniciar el proyecto: npm run start:dev
+  npm run start:dev
+
+Migraciones: 
+- cree o modifique una entidad, entonces debo utilizar: 
+
+  npm run migration:generate //esto genera el archivo de la modificacion
+  npm run migration:run //y esto lo pone marcha haciendolo efectivo.
+
+- si en alguna de las ultimas modificaciones cometi un error y ya utilice migration generate y run puedo utilizar:
+
+  npm run migration:revert //esto revierte la ultima migracion que realice, es como un ctrl + z
+
+- En data-source.ts dentro de la funcion DataSource se debe agregar:
+
+  ssl: true //cuando mi base de datos se va a conectar a la nube porque la nube tiene certificado de proteccion
+            // y sin esta opcion en true no me va a conectar correctamente.

@@ -29,7 +29,7 @@ import { OrderDetail } from './orders/entities/orderDetail.entity';
       username: configService.get('DB_USERNAME'),
       password: configService.get('DB_PASSWORD'),
       entities: [Product, User, Order, OrderDetail, Category],
-      synchronize: true,
+      synchronize: false,
       logging: true,
      })
     }),
