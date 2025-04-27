@@ -17,14 +17,14 @@ export class OrdersRepository {
 
     async addOrder(order: CreateOrderDto){
         const user = await this.userRepository.getById(order.userId);
-        if(!user)throw new NotFoundException('usuario no encontrado');
+        // if(!user)throw new NotFoundException('usuario no encontrado'); //ya lo valida la funcion getById de users
         
         const productsToBuy: Product[] = [];
         let total = 0;
     
         for ( const item of order.products) {
             const product = await this.productRepository.getProductById(item.id);
-            if(!product) throw new ConflictException(`El producto con el ID ${item.id} no existe`);
+            // if(!product) throw new ConflictException(`El producto con el ID ${item.id} no existe`);//Ya lo valida en la funcion
             if(product.stock <= 0 ) continue;
 
             product.stock -= 1;

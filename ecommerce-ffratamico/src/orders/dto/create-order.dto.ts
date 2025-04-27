@@ -2,12 +2,12 @@ import { IsArray, IsUUID, ValidateNested, ArrayNotEmpty } from 'class-validator'
 import { Type } from 'class-transformer';
 
 class ProductIdDTO {
-  @IsUUID(undefined, {message: 'El ID debe ser un UUID válido'})
+  @IsUUID(undefined, {message: 'El ID debe ser un UUID válido'}) //Valida que el ID del producto es un UUID
   id: string;
 }
 
 export class CreateOrderDto {
-  @IsUUID()
+  @IsUUID(undefined, {message: 'El ID debe ser un UUID válido'})
   userId: string;
 
   @IsArray()
