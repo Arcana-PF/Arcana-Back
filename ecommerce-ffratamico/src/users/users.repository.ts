@@ -73,12 +73,9 @@ export class UserRepository{
     }
     
     async createUser(user: CreateUserDTO){
-        const exists = await this.repository.findOne({where:{email: user.email}});
-        if(exists){throw new ConflictException('Ya existe un usuario con ese email')}
         const newUser = this.repository.create(user);
         await this.repository.save(newUser);
-        const {id, ...resto} = newUser;
-        return id;
+        return newUser;
     }
 
     async deleteUser(id: string){

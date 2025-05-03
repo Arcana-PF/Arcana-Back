@@ -7,6 +7,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CategoriesModule } from './categories/categories.module';
 import { OrdersModule } from './orders/orders.module';
 import { postgresDataSourceConfig } from 'src/config/data-source';
+import { CloudinaryService } from './services/cloudinary/cloudinary.service';
+import { FileUploadModule } from './file-upload/file-upload.module';
 
 @Module({
   imports: [
@@ -25,21 +27,9 @@ import { postgresDataSourceConfig } from 'src/config/data-source';
      },
     // Al crear el postgresDataSourceConfig y traerlo en el forRoot ya no tengo que escribir todas las configuraciones 
     // de la base de datos sino que las trae directametne desde data-source utilizando el alias que elegi.
-    // Ya no es necesarios escribir todo esto:
-    //   ({
-    //   type: 'postgres',
-    //   database: configService.get('DB_NAME'),
-    //   host: configService.get('DB_HOST'),
-    //   port: configService.get('DB_PORT'),
-    //   username: configService.get('DB_USERNAME'),
-    //   password: configService.get('DB_PASSWORD'),
-    //   entities: [Product, User, Order, OrderDetail, Category],
-    //   synchronize: false,
-    //   logging: true,
-    //  })
     }),
-    UsersModule, ProductsModule, AuthModule, CategoriesModule, OrdersModule],
+    UsersModule, ProductsModule, AuthModule, CategoriesModule, OrdersModule, FileUploadModule],
   controllers: [],
-  providers: [],
+  providers: [CloudinaryService],
 })
 export class AppModule {}
