@@ -14,13 +14,17 @@ import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDTO } from './dto/update-user.dto';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { IdParamDTO } from 'src/Id-Param.DTO';
+import { Roles } from 'src/decorators/roles/roles.decorator';
+import { Role } from 'src/config/enum/role.enum';
+import { RolesGuard } from 'src/auth/guard/roles/roles.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @UseGuards(AuthGuard) // Header de autorizacion
+  @Roles(Role.Admin)
+  @UseGuards(AuthGuard, RolesGuard) // Header de autorizacion
   async getAllUsers() {
     return await this.usersService.getAll();
   }

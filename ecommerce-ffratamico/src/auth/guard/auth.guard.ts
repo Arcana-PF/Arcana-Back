@@ -1,28 +1,35 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { AuthenticatedRequest } from '../dto/AuthenticatedRequest.dto';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  canActivate(
-    context: ExecutionContext,
-  ): boolean {
-    const request: Request = context.switchToHttp().getRequest();
-    
-    const authHeader = request.headers['authorization'];
-    
-    if (!authHeader) {
-      throw new UnauthorizedException('Email o password incorrectos'); // Verificamos si el header de autorización existe
+  constructor(private readonly jwtService: JwtService) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+
+    const token = request.headers['authorization']?.split(' ')[1]; // Esto significa que despues des Bearer va un espacio y despues el token
+    //ejemplo: Bearer fdsg684fg68f7g6a8g74
+    if (!token) {
+      throw new UnauthorizedException('token no encontrado'); // Verificamos si el token existe
     }
 
-    const [basic, credentials] = authHeader.split(' '); // Verificamos si el formato es correcto (debe comenzar con "Basic")
-    if (basic !== 'Basic' || !credentials) { 
-      throw new UnauthorizedException('Email o password incorrectos');
-    }
+    try {
+      const secret = process.env.JWT_SECRET;
+      const verification = await this.jwtService.verifyAsync(token, { secret });
+      
+      // verification.roles = ['admin']; //esto se lo puedo agregar si los usuarios tienen distintos roles
+      request.user = verification;
 
-    const [email, password] = credentials.split(':'); // Verificamos que el formato es "Basic: email:password"
-    if (!email || !password) {
-      throw new UnauthorizedException('Email o password incorrectos');
+      return true;
+    } catch (error) {
+      throw new UnauthorizedException('token no valido');
     }
-
-    return true;
   }
 }

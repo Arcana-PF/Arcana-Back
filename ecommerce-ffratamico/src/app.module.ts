@@ -9,6 +9,7 @@ import { OrdersModule } from './orders/orders.module';
 import { postgresDataSourceConfig } from 'src/config/data-source';
 import { CloudinaryService } from './services/cloudinary/cloudinary.service';
 import { FileUploadModule } from './file-upload/file-upload.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -16,19 +17,30 @@ import { FileUploadModule } from './file-upload/file-upload.module';
       isGlobal: true,
       load: [postgresDataSourceConfig], //envFilePath: './.env.development'
     }),
-    TypeOrmModule.forRootAsync({
-     inject: [ConfigService],
-     useFactory: (configService: ConfigService) => {
-      const config = configService.get('postgres');
-      return{
-        ...config,
-        migrations: [],
-      };
-     },
-    // Al crear el postgresDataSourceConfig y traerlo en el forRoot ya no tengo que escribir todas las configuraciones 
+    // Al crear el postgresDataSourceConfig y traerlo en el forRoot ya no tengo que escribir todas las configuraciones
     // de la base de datos sino que las trae directametne desde data-source utilizando el alias que elegi.
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const config = configService.get('postgres');
+        return {
+          ...config,
+          migrations: [],
+        };
+      },
     }),
-    UsersModule, ProductsModule, AuthModule, CategoriesModule, OrdersModule, FileUploadModule],
+    UsersModule,
+    ProductsModule,
+    AuthModule,
+    CategoriesModule,
+    OrdersModule,
+    FileUploadModule,
+    JwtModule.register({
+      global: true,
+      signOptions: {expiresIn: '1h'},
+      secret: process.env.JWT_SECRET
+    })
+  ],
   controllers: [],
   providers: [CloudinaryService],
 })

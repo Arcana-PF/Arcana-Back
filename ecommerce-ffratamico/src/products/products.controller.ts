@@ -5,6 +5,9 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Response } from 'express';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { IdParamDTO } from 'src/Id-Param.DTO';
+import { Roles } from 'src/decorators/roles/roles.decorator';
+import { Role } from 'src/config/enum/role.enum';
+import { RolesGuard } from 'src/auth/guard/roles/roles.guard';
 
 @Controller('products')
 export class ProductsController {
@@ -46,7 +49,8 @@ export class ProductsController {
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard) // Header de autorizacion
+  @Roles(Role.Admin)
+  @UseGuards(AuthGuard, RolesGuard) // Header de autorizacion
   async update(@Param() param: IdParamDTO, @Body() updateProduct: UpdateProductDto) {
     return await this.productsService.update(param.id, updateProduct)
   }
