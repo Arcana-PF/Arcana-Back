@@ -12,7 +12,9 @@ FROM node:20-alpine AS build
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+COPY package.json ./
+
+COPY package-lock.json ./
 
 COPY --from=development /usr/src/app/node_modules ./node_modules
 
