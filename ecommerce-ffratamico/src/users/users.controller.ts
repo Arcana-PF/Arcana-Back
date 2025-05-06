@@ -13,11 +13,14 @@ import { UsersService } from './users.service';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDTO } from './dto/update-user.dto';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
-import { IdParamDTO } from 'src/Id-Param.DTO';
+import { IdParamDTO } from 'src/OthersDtos/id-param.dto';
 import { Roles } from 'src/decorators/roles/roles.decorator';
 import { Role } from 'src/config/enum/role.enum';
 import { RolesGuard } from 'src/auth/guard/roles/roles.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -47,11 +50,6 @@ export class UsersController {
   @Post('seeder')
   addUsers(){
     return this.usersService.addUsers();
-  }
-
-  @Post()
-  async createUser(@Body() newUser: CreateUserDTO) {
-    return await this.usersService.createUser(newUser);
   }
 
   @Delete(':id')

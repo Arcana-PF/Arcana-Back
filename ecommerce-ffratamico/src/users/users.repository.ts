@@ -63,17 +63,12 @@ export class UserRepository{
         return users.slice(startIndex, endIndex).map(({ password, ...user }) => user);
     }
 
-    async getByIdForOrders(id: string) {
-        const user = await this.repository.findOne({where: {id}})
-        if(!user) throw new NotFoundException("El id del usuario no existe");
-        return user;
-    }
-
     async getById(id: string) {
         const user = await this.repository.findOne({where: {id}, relations: ['orders']})
         if(!user) throw new NotFoundException("El id del usuario no existe");
         
         delete user.password;
+        delete user.administrator;
 
         return user;
     }

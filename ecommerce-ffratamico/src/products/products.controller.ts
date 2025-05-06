@@ -4,11 +4,13 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Response } from 'express';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
-import { IdParamDTO } from 'src/Id-Param.DTO';
+import { IdParamDTO } from 'src/OthersDtos/id-param.dto';
 import { Roles } from 'src/decorators/roles/roles.decorator';
 import { Role } from 'src/config/enum/role.enum';
 import { RolesGuard } from 'src/auth/guard/roles/roles.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Products')
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
@@ -32,6 +34,7 @@ export class ProductsController {
   }
 
   @Post()
+  @ApiBearerAuth()
   @UseGuards(AuthGuard) // Header de autorizacion
   async create(@Body() newProduct: CreateProductDto) {
     return await this.productsService.createProduct(newProduct);
@@ -43,12 +46,14 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
   @UseGuards(AuthGuard) // Header de autorizacion
   async remove(@Param() param: IdParamDTO) {
     return await this.productsService.removeProduct(param.id);
   }
 
   @Put(':id')
+  @ApiBearerAuth()
   @Roles(Role.Admin)
   @UseGuards(AuthGuard, RolesGuard) // Header de autorizacion
   async update(@Param() param: IdParamDTO, @Body() updateProduct: UpdateProductDto) {

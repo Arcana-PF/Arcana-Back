@@ -24,10 +24,6 @@ export class UsersService {
     return await this.userRepository.getById(id);
   }
   
-  async createUser(newUser: CreateUserDTO) {
-    return await this.userRepository.createUser(newUser);
-  }
-  
   async deleteUser(id: string) {
     return await this.userRepository.deleteUser(id);
   }
