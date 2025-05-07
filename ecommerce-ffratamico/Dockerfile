@@ -3,6 +3,7 @@ FROM node:20-alpine AS development
 WORKDIR /usr/src/app
 
 COPY package*.json ./
+COPY tsconfig.json ./
 
 RUN npm ci
 
@@ -13,8 +14,8 @@ FROM node:20-alpine AS build
 WORKDIR /usr/src/app
 
 COPY package.json ./
-
 COPY package-lock.json ./
+COPY tsconfig.json ./
 
 COPY --from=development /usr/src/app/node_modules ./node_modules
 
