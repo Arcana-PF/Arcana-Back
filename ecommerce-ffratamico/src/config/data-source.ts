@@ -13,10 +13,9 @@ export const AppDataSource: DataSourceOptions = ({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     synchronize: process.env.NODE_ENV === 'docker' ? false : false,
-    entities: ['dist/**/*.entity{.ts,.js}'], // busca automaticamente todas las entidades del proyecto.
+    entities: ['dist/**/*.entity{.js,.ts}'], // busca automaticamente todas las entidades del proyecto.
     migrations: ['dist/migrations/*{.ts,.js}'],
-    subscribers: [],
-    ssl: true
+    ssl: isDocker ? { rejectUnauthorized: false } : false,
 });
 
 export const postgresDataSourceConfig = registerAs(
