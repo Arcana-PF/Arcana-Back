@@ -12,17 +12,4 @@ export class UserDTO {
   @IsString()
   password: string;
 
-  @IsString()
-  address: string;
-
-  @IsString()
-  phone: string;
-
-  @IsString()
-  @IsOptional()
-  country?: string;
-
-  @IsString()
-  @IsOptional()
-  city?: string;
 }
