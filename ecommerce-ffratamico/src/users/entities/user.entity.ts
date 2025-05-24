@@ -18,20 +18,8 @@ export class User {
   @Column({length: 100, nullable: false})
   password: string;
 
-  @Column('int', {nullable: true})
-  phone: number;
-
-  @Column({length: 50, nullable: true})
-  country: string;
-
-  @Column('text', {nullable: true})
-  address: string;
-
-  @Column({length: 50, nullable: true})
-  city: string;
-
-  @Column({type: 'enum', enum: Role, default:Role.User})
-  administrator: Role
+  @Column({ type: 'boolean', default: false })
+  isAdmin: boolean;
 
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];

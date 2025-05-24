@@ -16,30 +16,18 @@ export class UserRepository{
             email: `fausto@mail.com`,
             name: `Fausto Fratamico`,
             password: `123456`,
-            address: `Falsa 123`,
-            phone: 456789,
-            country: `Argentina`,
-            city: `springfield`,
             orders: []
         },
         {
             email: `gisela@mail.com`,
             name: `Gisela torrez`,
             password: `456789`,
-            address: `Falsa 345`,
-            phone: 996574,
-            country: `Argentina`,
-            city: `shelbyville`,
             orders: []
         },
         {
             email: `valentino@mail.com`,
             name: `Valentino Sparvoli`,
             password: `789123`,
-            address: `Falsa 789`,
-            phone: 5589321,
-            country: `Argentina`,
-            city: `Bronson`,
             orders: []
         },
     ];
@@ -68,7 +56,7 @@ export class UserRepository{
         if(!user) throw new NotFoundException("El id del usuario no existe");
         
         delete user.password;
-        delete user.administrator;
+        delete user.isAdmin;
 
         return user;
     }
