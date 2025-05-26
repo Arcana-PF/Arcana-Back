@@ -18,6 +18,12 @@ export class User {
   @Column({length: 100, nullable: false})
   password: string;
 
+  @Column('int', {nullable: true})
+  phone: number;
+
+  @Column('text', {nullable: true})
+  address: string;
+
   @Column({ type: 'boolean', default: false })
   isAdmin: boolean;
 
