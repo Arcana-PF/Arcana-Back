@@ -3,19 +3,17 @@ import {config} from 'dotenv';
 config({path: '.env.development'});
 import { DataSource, DataSourceOptions } from "typeorm";
 
-const isDocker = process.env.NODE_ENV === 'docker';
-
 export const AppDataSource: DataSourceOptions = ({
     type: 'postgres',
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT!, 10),
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    synchronize: true,
+    host: process.env.RENDER_DB_HOST,
+    port: parseInt(process.env.RENDER_DB_PORT!, 10),
+    username: process.env.RENDER_DB_USERNAME,
+    password: process.env.RENDER_DB_PASSWORD,
+    database: process.env.RENDER_DB_NAME,
+    synchronize: false,
     entities: ['dist/**/*.entity{.js,.ts}'], // busca automaticamente todas las entidades del proyecto.
     migrations: ['dist/migrations/*{.ts,.js}'],
-    ssl: false,
+    ssl: true,
 });
 
 export const postgresDataSourceConfig = registerAs(
