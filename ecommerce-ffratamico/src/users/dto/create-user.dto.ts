@@ -1,4 +1,4 @@
-import { IsEmail, IsInt, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import { IsEmail, IsInt, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from "class-validator";
 
 export class CreateUserDTO{
     @IsEmail()
@@ -15,28 +15,17 @@ export class CreateUserDTO{
         'Tu contraseña debe tener entre 8 y 15 caracteres, incluir al menos una letra minúscula, una letra mayúscula, un número y algunos de estos caracteres especiales: !@#$%^&*'
     },)
     @IsString()
+    @IsNotEmpty()
     @MaxLength(20)
     password: string;
 
     @IsString()
-    @IsOptional()
     @MinLength(3)
     @MaxLength(50)
-    address?: string;
+    address: string;
 
     @IsInt()
     phone: number;
 
-    @IsString()
-    @IsOptional()
-    @MinLength(5)
-    @MaxLength(50)
-    country?: string;
-    
-    @IsString()
-    @IsOptional()
-    @MinLength(5)
-    @MaxLength(50)
-    city?: string;
 }
 
