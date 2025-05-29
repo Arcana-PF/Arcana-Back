@@ -15,8 +15,8 @@ async function bootstrap() {
   }));
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Proyecto 4')
-    .setDescription('Demo del proyecto 4 de Backend')
+    .setTitle('Arcana')
+    .setDescription('Back-end de la base de datos de Arcana')
     .setVersion("1.0")
     .addBearerAuth()
     .build();
