@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
-import { OrdersService } from './orders.service';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '../auth/guard/auth.guard';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { IdParamDTO } from 'src/OthersDtos/id-param.dto';
-import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { PayPalCaptureDto } from './dto/paypal-capture.dto';
+import { OrdersService } from './orders.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiBearerAuth()
@@ -12,14 +12,20 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-  @UseGuards(AuthGuard) // Header de autorizacion
-  async addOrder(@Body() newOrder: CreateOrderDto) {
-    return await this.ordersService.addOrder(newOrder);
+  @UseGuards(AuthGuard)
+  async createOrder(@Body() newOrder: CreateOrderDto) {
+    return this.ordersService.createOrderWithPayment(newOrder);
+  }
+
+  @Post('paypal/capture')
+  @UseGuards(AuthGuard)
+  async capturePayPalOrder(@Body() captureDto: PayPalCaptureDto) {
+    return this.ordersService.capturePayPalOrder(captureDto);
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard) // Header de autorizacion
-  findOne(@Param() param: IdParamDTO) {
-    return this.ordersService.getOrder(param.id);
+  @UseGuards(AuthGuard)
+  async getOrderDetails(@Param('id') orderId: string) {
+    return this.ordersService.getOrderDetails(orderId);
   }
 }
