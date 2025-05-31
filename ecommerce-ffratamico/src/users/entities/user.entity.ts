@@ -18,8 +18,8 @@ export class User {
   @Column({length: 100, nullable: false})
   password: string;
 
-  @Column({nullable: true})
-  phone: number;
+  @Column({ type: 'varchar' })
+  phone: string;
 
   @Column('text', {nullable: true})
   address: string;

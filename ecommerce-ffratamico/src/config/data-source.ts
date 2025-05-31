@@ -11,6 +11,7 @@ export const AppDataSource: DataSourceOptions = ({
     password: process.env.RENDER_DB_PASSWORD,
     database: process.env.RENDER_DB_NAME,
     synchronize: false,
+    dropSchema: false,
     entities: ['dist/**/*.entity{.js,.ts}'], // busca automaticamente todas las entidades del proyecto.
     migrations: ['dist/migrations/*{.ts,.js}'],
     ssl: true,
