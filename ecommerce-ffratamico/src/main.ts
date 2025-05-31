@@ -6,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors({origin: '*',});
   app.use(LoggerGlobal);
 
   app.useGlobalPipes(new ValidationPipe({ //Esto sirve para que entre en vigencia todas las validaciones que cree en las class de los DTO
