@@ -18,7 +18,7 @@ export class User {
   @Column({length: 100, nullable: false})
   password: string;
 
-  @Column('int', {nullable: true})
+  @Column({nullable: true})
   phone: number;
 
   @Column('text', {nullable: true})
