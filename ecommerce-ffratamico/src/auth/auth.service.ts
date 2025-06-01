@@ -53,6 +53,6 @@ export class AuthService {
     };
     const token = this.jwtService.sign(payload);
 
-    return { success: 'Sesión iniciada correctamente', validationToken: token };
+    return { success: 'Sesión iniciada correctamente', validationToken: token, user };
   }
 }
