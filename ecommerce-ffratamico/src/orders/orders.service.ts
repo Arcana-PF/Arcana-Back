@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException, Redirect } from '@nestjs/common';
 import { OrdersRepository } from './orders.repository';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PayPalService } from './paypal.service';
@@ -21,14 +21,17 @@ export class OrdersService {
         'USD'
       );
 
+      const approveLink = paypalOrderId.links.find(link => link.rel === 'approve');
+
       return {
         success: true,
         orderId: dbOrder.id,
-        paypalOrderId,
+        paypalIdOrder: paypalOrderId.id,
         amount: dbOrder.orderDetail.price,
         nextSteps: {
           client: 'Debe aprobar el pago en PayPal',
-          server: `POST /orders/paypal/capture con { "orderId": "${paypalOrderId}" }`
+          redirectUrl: approveLink?.href || 'no disponible',
+          server: `POST /orders/paypal/capture con { "orderId": "${paypalOrderId.id}" }`
         },
         orderDetails: {
           date: dbOrder.date,

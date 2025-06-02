@@ -12,7 +12,7 @@ export class PayPalService {
     this.client = new paypal.core.PayPalHttpClient(environment);
   }
 
-  async createOrder(amount: number, currency: string): Promise<string> {
+  async createOrder(amount: number, currency: string): Promise<{ id: string, links: any[] }> {
     const request = new paypal.orders.OrdersCreateRequest();
     request.requestBody({
       intent: 'CAPTURE',
@@ -21,7 +21,9 @@ export class PayPalService {
       }],
     });
     const response = await this.client.execute(request);
-    return response.result.id;
+    return {
+      id: response.result.id,
+    links: response.result.links};
   }
 
   async captureOrder(orderId: string): Promise<any> {
