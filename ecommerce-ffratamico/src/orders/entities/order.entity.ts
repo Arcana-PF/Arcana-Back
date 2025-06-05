@@ -15,6 +15,9 @@ export class Order {
   })
   date: Date;
 
+   @Column({ default: true })
+    isActive: boolean; // ← Nuevo campo para borrado lógico
+
   @ManyToOne(() => User, (user) => user.orders, {nullable: false})
   user:User;
 

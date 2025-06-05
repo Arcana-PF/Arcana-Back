@@ -24,6 +24,9 @@ export class Product {
   @Column('text', {default: 'imagne por defecto'})
   imgUrl: string;
 
+  @Column({ default: true })
+  isActive: boolean; // ← Nuevo campo para borrado lógico
+
   @ManyToOne(() => Category, (category) => category.products, { nullable: false })
   category: Category;
 
