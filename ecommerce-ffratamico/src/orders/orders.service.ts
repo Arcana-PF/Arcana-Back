@@ -13,7 +13,7 @@ export class OrdersService {
     private readonly paypalService: PayPalService
   ) {}
   
-   async createOrderWithPayment(newOrder: CreateOrderDto) {
+  async createOrderWithPayment(newOrder: CreateOrderDto) {
     const dbOrder = await this.ordersRepository.createDatabaseOrder(newOrder);
 
     try {
@@ -57,7 +57,7 @@ export class OrdersService {
     }
 
     const updatedOrder = await this.ordersRepository.updateOrderWithPayment(
-      paypalResult.id,
+      captureDto.localOrderId,
       {
         status: OrderStatus.PAID,
         paypalData: {
@@ -83,7 +83,7 @@ export class OrdersService {
     };
   }
   
-   async getOrderDetails(orderId: string) {
+  async getOrderDetails(orderId: string) {
     const order = await this.ordersRepository.getFullOrderDetails(orderId);
     if (!order) throw new NotFoundException(`Orden ${orderId} no encontrada`);
 
@@ -100,6 +100,7 @@ export class OrdersService {
       })),
       total: order.orderDetail.price
     };
+  }
 
   async update(id: string, updateOrderDto: UpdateOrderDto) {
     return await this.ordersRepository.update(id, updateOrderDto);

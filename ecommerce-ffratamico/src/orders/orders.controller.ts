@@ -19,37 +19,37 @@ export class OrdersController {
   
   // POST /orders - Crear nueva orden (existente)
   @Post()
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async createOrder(@Body() newOrder: CreateOrderDto) {
     return this.ordersService.createOrderWithPayment(newOrder);
   }
 
   @Get()
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async findAll() {
     return await this.ordersService.findAll();
   }
 
   @Post('paypal/capture')
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async capturePayPalOrder(@Body() captureDto: PayPalCaptureDto) {
     return this.ordersService.capturePayPalOrder(captureDto);
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
    async getOrderDetails(@Param('id') orderId: string) {
     return this.ordersService.getOrderDetails(orderId);
    }
 
   @Patch(':id')
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async update(@Param() param: IdParamDTO, @Body() updateOrderDto: UpdateOrderDto) {
     return await this.ordersService.update(param.id, updateOrderDto);
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async remove(@Param() param: IdParamDTO) {
     return await this.ordersService.remove(param.id);
   }
