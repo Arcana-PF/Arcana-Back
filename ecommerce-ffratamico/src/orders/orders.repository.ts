@@ -5,97 +5,27 @@ import {
   InternalServerErrorException 
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { UserRepository } from "src/users/users.repository";
-import { Order } from "./entities/order.entity";
 import { Repository } from "typeorm";
+import { Order } from "./entities/order.entity";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { UpdateOrderDto } from "./dto/update-order.dto";
 import { ProductsRepository } from "src/products/products.repository";
 import { OrderDetailRepository } from "./orderDetail.repository";
 import { Product } from "src/products/entities/product.entity";
+import { UserRepository } from "../users/users.repository";
+import { OrderStatus } from "./enums/order-status.enum";
 
 @Injectable()
 export class OrdersRepository {
-    constructor(
-        @InjectRepository(Order) 
-        private readonly repository: Repository<Order>, 
-        private readonly userRepository: UserRepository,
-        private readonly productRepository: ProductsRepository,
-        private readonly orderDetailRepository: OrderDetailRepository
-    ) {}
-
-    /**
-     * Crea una nueva orden con validación de stock
-     * @param createOrderDto Datos para crear la orden
-     * @returns Orden creada con detalles
-     */
-    async create(createOrderDto: CreateOrderDto) {
-        try {
-            // 1. Validar usuario
-            const user = await this.userRepository.getById(createOrderDto.userId);
-            if (!user) throw new NotFoundException('Usuario no encontrado');
-
-            // 2. Procesar productos
-            const productsToBuy: Product[] = [];
-            let total = 0;
-
-            for (const item of createOrderDto.products) {
-                const product = await this.productRepository.getProductById(item.id);
-                
-                // Validar stock y disponibilidad
-                if (!product) throw new NotFoundException(`Producto ${item.id} no encontrado`);
-                if (product.stock <= 0 || !product.isActive) {
-                    continue; // Saltar productos sin stock o inactivos
-                }
-
-                // Actualizar stock
-                product.stock -= 1;
-                await this.productRepository.updateProduct(product.id, { 
-                    stock: product.stock 
-                });
-
-                productsToBuy.push(product);
-                total += Number(product.price);
-            }
-
-            // 3. Validar que haya productos disponibles
-            if (productsToBuy.length === 0) {
-                throw new ConflictException('No hay productos disponibles con stock');
-            }
-
-            // 4. Crear detalle de orden
-            const orderDetail = this.orderDetailRepository.createOrderDetail({
-                price: total, 
-                products: productsToBuy
-            });
-            await this.orderDetailRepository.saveOrderDetail(orderDetail);
-
-            const newOrder = this.repository.create({
-                user,
-                orderDetail,
-                isActive: true 
-            });
-
-            await this.repository.save(newOrder);
-
-            return {
-                id: newOrder.id,
-                total: orderDetail.price,
-                date: newOrder.date, // Incluye la fecha autogenerada
-                isActive: newOrder.isActive,
-                message: 'Orden creada exitosamente'
-            };
-
-        } catch (error) {
-            if (error instanceof ConflictException || 
-                error instanceof NotFoundException) {
-                throw error;
-            }
-            throw new InternalServerErrorException('Error al crear la orden');
-        }
-    }
-
-    /**
+  constructor(
+    @InjectRepository(Order) 
+    private readonly repository: Repository<Order>,
+    private readonly userRepository: UserRepository,
+    private readonly productRepository: ProductsRepository,
+    private readonly orderDetailRepository: OrderDetailRepository
+  ) {}
+  
+  /**
      * Obtiene todas las órdenes activas
      * @returns Lista de órdenes con relaciones
      */
@@ -117,7 +47,74 @@ export class OrdersRepository {
             throw new InternalServerErrorException('Error al obtener órdenes');
         }
     }
+  
+  async createDatabaseOrder(orderData: CreateOrderDto): Promise<Order> {
+    const user = await this.userRepository.getById(orderData.userId);
+    const productsToBuy: Product[] = [];
+    let total = 0;
 
+    for (const item of orderData.products) {
+      const product = await this.productRepository.getProductById(item.id);
+      if(product.stock <= 0) continue;
+
+      product.stock -= 1;
+      await this.productRepository.updateProduct(product.id, {stock: product.stock});
+
+      productsToBuy.push(product);
+      total += Number(product.price);
+    }
+
+    if(productsToBuy.length === 0) {
+      throw new ConflictException('Ningún producto tiene stock disponible');
+    }
+
+    const orderDetail = this.orderDetailRepository.createOrderDetail({
+      price: total, 
+      products: productsToBuy
+    });
+    await this.orderDetailRepository.saveOrderDetail(orderDetail);
+
+    const newOrder = this.repository.create({
+      user,
+      orderDetail,
+      status: OrderStatus.PENDING
+    });
+
+    return this.repository.save(newOrder);
+  }
+  
+  async updateOrderWithPayment(
+    orderId: string,
+    updateData: {
+      status: OrderStatus;
+      paypalData?: {
+        captureId: string;
+        payerEmail: string;
+        fullResponse: any;
+      };
+    }
+  ): Promise<Order> {
+    const order = await this.repository.findOne({
+      where: { id: orderId },
+      relations: ['orderDetail', 'orderDetail.products', 'user']
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Orden ${orderId} no encontrada`);
+    }
+
+    order.status = updateData.status;
+    
+    if (updateData.paypalData) {
+      order.paypalData = {
+        captureId: updateData.paypalData.captureId,
+        payerEmail: updateData.paypalData.payerEmail,
+        fullResponse: updateData.paypalData.fullResponse
+      };
+    }
+
+    return this.repository.save(order);
+  }
     /**
      * Busca una orden activa por ID
      * @param id UUID de la orden
@@ -229,5 +226,28 @@ export class OrdersRepository {
         } catch (error) {
             throw new InternalServerErrorException('Error al obtener el historial completo');
         }
+
+  async getFullOrderDetails(orderId: string): Promise<Order> {
+    const order = await this.repository.findOne({
+      where: { id: orderId },
+      relations: [
+        'user', 
+        'orderDetail', 
+        'orderDetail.products'
+      ]
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Orden ${orderId} no encontrada`);
     }
+
+    return order;
+  }
+
+  async updateOrderStatus(
+    orderId: string, 
+    status: OrderStatus
+  ): Promise<void> {
+    await this.repository.update(orderId, { status });
+  }
 }
