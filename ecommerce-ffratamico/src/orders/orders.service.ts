@@ -4,6 +4,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { PayPalService } from './paypal.service';
 import { PayPalCaptureDto } from './dto/paypal-capture.dto';
 import { OrderStatus } from './enums/order-status.enum';
+import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Injectable()
 export class OrdersService {
@@ -11,8 +12,8 @@ export class OrdersService {
     private readonly ordersRepository: OrdersRepository,
     private readonly paypalService: PayPalService
   ) {}
-
-  async createOrderWithPayment(newOrder: CreateOrderDto) {
+  
+   async createOrderWithPayment(newOrder: CreateOrderDto) {
     const dbOrder = await this.ordersRepository.createDatabaseOrder(newOrder);
 
     try {
@@ -43,7 +44,11 @@ export class OrdersService {
       throw new InternalServerErrorException('Error al crear pago en PayPal: ' + error.message);
     }
   }
-
+  
+  async findAll() {
+    return await this.ordersRepository.findAll();
+  }
+  
   async capturePayPalOrder(captureDto: PayPalCaptureDto) {
     const paypalResult = await this.paypalService.captureOrder(captureDto.orderId);
 
@@ -77,8 +82,8 @@ export class OrdersService {
       products: updatedOrder.orderDetail.products
     };
   }
-
-  async getOrderDetails(orderId: string) {
+  
+   async getOrderDetails(orderId: string) {
     const order = await this.ordersRepository.getFullOrderDetails(orderId);
     if (!order) throw new NotFoundException(`Orden ${orderId} no encontrada`);
 
@@ -95,5 +100,13 @@ export class OrdersService {
       })),
       total: order.orderDetail.price
     };
+
+  async update(id: string, updateOrderDto: UpdateOrderDto) {
+    return await this.ordersRepository.update(id, updateOrderDto);
+  }
+
+  async remove(id: string) {
+    return await this.ordersRepository.remove(id);
+
   }
 }

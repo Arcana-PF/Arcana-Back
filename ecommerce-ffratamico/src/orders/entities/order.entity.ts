@@ -11,6 +11,10 @@ export class Order {
   @Column({ type: 'timestamp', default: () => "date_trunc('minute', CURRENT_TIMESTAMP)" })
   date: Date;
 
+
+  @Column({ default: true })
+    isActive: boolean; // ← Nuevo campo para borrado lógico
+
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
   status: OrderStatus;
 

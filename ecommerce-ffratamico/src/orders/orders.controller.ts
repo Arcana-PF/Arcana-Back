@@ -1,8 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '../auth/guard/auth.guard';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { PayPalCaptureDto } from './dto/paypal-capture.dto';
+
+import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
+import { IdParamDTO } from 'src/OthersDtos/id-param.dto';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { PayPalCaptureDto } from './dto/paypal-capture.dto';
+
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiBearerAuth()
@@ -11,10 +15,19 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
+  /* ENDPOINTS NUEVOS AGREGADOS */
+  
+  // POST /orders - Crear nueva orden (existente)
   @Post()
   @UseGuards(AuthGuard)
   async createOrder(@Body() newOrder: CreateOrderDto) {
     return this.ordersService.createOrderWithPayment(newOrder);
+  }
+
+  @Get()
+  @UseGuards(AuthGuard)
+  async findAll() {
+    return await this.ordersService.findAll();
   }
 
   @Post('paypal/capture')
@@ -25,7 +38,19 @@ export class OrdersController {
 
   @Get(':id')
   @UseGuards(AuthGuard)
-  async getOrderDetails(@Param('id') orderId: string) {
+   async getOrderDetails(@Param('id') orderId: string) {
     return this.ordersService.getOrderDetails(orderId);
+   }
+
+  @Patch(':id')
+  @UseGuards(AuthGuard)
+  async update(@Param() param: IdParamDTO, @Body() updateOrderDto: UpdateOrderDto) {
+    return await this.ordersService.update(param.id, updateOrderDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuard)
+  async remove(@Param() param: IdParamDTO) {
+    return await this.ordersService.remove(param.id);
   }
 }
