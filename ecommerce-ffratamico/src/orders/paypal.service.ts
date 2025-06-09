@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import * as paypal from '@paypal/checkout-server-sdk';
-
+import * as Paypal from '@paypal/checkout-server-sdk'
 @Injectable()
 export class PayPalService {
   private client: paypal.core.PayPalHttpClient;

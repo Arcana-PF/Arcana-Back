@@ -18,8 +18,9 @@ export class Order {
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
   status: OrderStatus;
 
-  @Column({ type: 'jsonb', nullable: true })
+ @Column({ type: 'jsonb', nullable: true })
   paypalData: {
+    orderId?: string;  // <- Añade esta propiedad
     captureId?: string;
     payerEmail?: string;
     fullResponse?: any;
