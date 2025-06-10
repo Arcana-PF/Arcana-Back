@@ -9,7 +9,7 @@ export class FileUploadService {
         private readonly productRepository: ProductsRepository
     ){}
 
-    async uploadFile (file:UploadFileDTO, id: string){
+    async uploadProductImage (file:UploadFileDTO, id: string){
         const { fieldname, buffer, originalname, mimetype, size } = file;
 
         const product = await this.productRepository.getProductById(id);
@@ -20,7 +20,12 @@ export class FileUploadService {
 
         const productUpdated = await this.productRepository.getProductById(id);
 
-        return productUpdated;
+        return {
+            success: true,
+            message: 'Imagen actualizada exitosamente',
+            imageUrl: url,
+            product: productUpdated,
+        };
     };
 
-}
+};

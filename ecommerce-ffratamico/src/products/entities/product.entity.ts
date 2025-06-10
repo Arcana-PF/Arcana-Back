@@ -21,7 +21,7 @@ export class Product {
   @Column('int', {nullable: false})
   stock: number;
 
-  @Column('text', {default: 'imagne por defecto'})
+  @Column('text', {default: 'https://res.cloudinary.com/dcixxfhx9/image/upload/v1749511642/Imagen_de_WhatsApp_2025-05-24_a_las_11.48.09_49378316_vgginz.jpg'})
   imgUrl: string;
 
   @Column({ default: true })
