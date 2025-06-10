@@ -5,7 +5,7 @@ export const MockProducts = [
     price: 200,
     stock: 20,
     imgUrl: 'imagen 1 url',
-    categoryName: 'Celulares'
+    categoryNames: ['Celulares']
   },
   {
     name: `product 2`,
@@ -13,7 +13,7 @@ export const MockProducts = [
     price: 300,
     stock: 12,
     imgUrl: 'imagen 2 url',
-    categoryName: 'Notebooks'
+    categoryNames: ['Notebooks']
   },
   {
     name: `product 3`,
@@ -21,7 +21,7 @@ export const MockProducts = [
     price: 500,
     stock: 10,
     imgUrl: 'imagen 3 url',
-    categoryName: 'Camaras'
+    categoryNames: ['Camaras']
   },
   {
     name: `product 4`,
@@ -29,6 +29,6 @@ export const MockProducts = [
     price: 500,
     stock: 10,
     imgUrl: 'imagen 4 url',
-    categoryName: 'Tablets'
+    categoryNames: ['Tablets']
   }
 ];

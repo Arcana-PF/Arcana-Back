@@ -1,5 +1,5 @@
 // src/products/entities/product.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
 import { Category } from '../../categories/entities/categories.entity';
 
 @Entity({ name: 'products' })
@@ -31,7 +31,8 @@ export class Product {
   @Column({nullable: true})
   score: number;
 
-  @ManyToOne(() => Category, (category) => category.products, { nullable: false })
-  category: Category;
+  @ManyToMany(() => Category, (category) => category.products, { eager: true })
+  @JoinTable()
+  categories: Category[];
 
 }
