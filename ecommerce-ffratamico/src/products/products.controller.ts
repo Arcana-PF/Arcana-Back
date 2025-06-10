@@ -32,7 +32,7 @@ export class ProductsController {
 
   @Post()
   @ApiBearerAuth()
-  @UseGuards(AuthGuard) // Header de autorizacion
+  // @UseGuards(AuthGuard) // Header de autorizacion
   async create(@Body() newProduct: CreateProductDto) {
     return await this.productsService.createProduct(newProduct);
   }

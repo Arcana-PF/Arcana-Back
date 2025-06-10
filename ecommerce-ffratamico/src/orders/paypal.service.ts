@@ -1,3 +1,4 @@
+// src/orders/paypal.service.ts
 import { Injectable } from '@nestjs/common';
 import * as paypal from '@paypal/checkout-server-sdk';
 
@@ -12,7 +13,7 @@ export class PayPalService {
     this.client = new paypal.core.PayPalHttpClient(environment);
   }
 
-  async createOrder(amount: number, currency: string): Promise<{ id: string, links: any[] }> {
+  async createOrder(amount: number, currency: string): Promise<{ id: string; links: any[] }> {
     const request = new paypal.orders.OrdersCreateRequest();
     request.requestBody({
       intent: 'CAPTURE',
@@ -20,10 +21,12 @@ export class PayPalService {
         amount: { currency_code: currency, value: amount.toFixed(2) },
       }],
     });
+
     const response = await this.client.execute(request);
     return {
       id: response.result.id,
-    links: response.result.links};
+      links: response.result.links,
+    };
   }
 
   async captureOrder(orderId: string): Promise<any> {
