@@ -19,14 +19,19 @@ export class Product {
   @Column('int', { nullable: false })
   stock: number;
 
-  @Column('text', { default: 'imagen por defecto' })
+  @Column('text', {default: 'https://res.cloudinary.com/dcixxfhx9/image/upload/v1749511642/Imagen_de_WhatsApp_2025-05-24_a_las_11.48.09_49378316_vgginz.jpg'})
   imgUrl: string;
 
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({default: 0})
+  quantity: number;
+
+  @Column({nullable: true})
+  score: number;
+
   @ManyToOne(() => Category, (category) => category.products, { nullable: false })
   category: Category;
 
-  // Eliminamos la relación con OrderDetail
 }

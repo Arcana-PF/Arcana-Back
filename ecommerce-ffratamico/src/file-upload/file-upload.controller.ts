@@ -4,7 +4,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { IdParamDTO } from 'src/OthersDtos/id-param.dto';
 import { ImageUploadPipe } from './pipes/image-upload/image-upload.pipe';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
 @ApiBearerAuth()
 @ApiTags('File Upload')
@@ -13,10 +13,12 @@ export class FileUploadController {
   constructor(private readonly fileUploadService: FileUploadService) {}
 
   @Post('uploadImage/:id')
-  @UseGuards(AuthGuard) // Header de autorizacion
+  // @UseGuards(AuthGuard) // Header de autorizacion
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('file'))
-  uploadFile(@Param() param: IdParamDTO, @UploadedFile(new ImageUploadPipe()) file: Express.Multer.File){
-    return this.fileUploadService.uploadFile(file, param.id)
+  @UseInterceptors(FileInterceptor('file', {limits: {fileSize: 1 * 1024 * 1024}}))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({schema: {type: 'object', properties: { file: { type: 'string', format: 'binary'}}}})
+  uploadProductImage(@Param() param: IdParamDTO, @UploadedFile(new ImageUploadPipe()) file: Express.Multer.File){
+    return this.fileUploadService.uploadProductImage(file, param.id)
   }
 }
