@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Order } from './entities/order.entity';
@@ -32,38 +37,27 @@ export class OrdersService {
     await queryRunner.startTransaction();
 
     try {
-      // 1. Crear la orden base
       const order = new Order();
       order.user = { id: newOrder.userId } as any;
       order.status = OrderStatus.PENDING;
 
-      // 2. Crear el detalle de la orden
       const orderDetail = new OrderDetail();
-      orderDetail.price = 0; // Inicializar total
+      orderDetail.price = 0;
       let total = 0;
 
-      // Guardar primero la orden y detalle para obtener IDs
       const savedOrder = await queryRunner.manager.save(Order, order);
       orderDetail.order = savedOrder;
       const savedOrderDetail = await queryRunner.manager.save(OrderDetail, orderDetail);
 
-      // 3. Procesar cada producto con cantidad
       for (const item of newOrder.products) {
         const product = await queryRunner.manager.findOne(Product, {
           where: { id: item.productId }
         });
 
-        if (!product) {
-          throw new NotFoundException(`Producto ${item.productId} no encontrado`);
-        }
-        if (!product.isActive) {
-                throw new ConflictException(`El producto ${product.name} no está disponible actualmente`);
-        }
-        if (product.stock < item.quantity) {
-          throw new ConflictException(`Stock insuficiente para ${product.name}`);
-        }
+        if (!product) throw new NotFoundException(`Producto ${item.productId} no encontrado`);
+        if (!product.isActive) throw new ConflictException(`El producto ${product.name} no está disponible actualmente`);
+        if (product.stock < item.quantity) throw new ConflictException(`Stock insuficiente para ${product.name}`);
 
-        // Crear item de orden
         const orderItem = new OrderDetailProduct();
         orderItem.product = product;
         orderItem.quantity = item.quantity;
@@ -72,29 +66,24 @@ export class OrdersService {
 
         await queryRunner.manager.save(OrderDetailProduct, orderItem);
 
-        // Actualizar total y stock
         total += product.price * item.quantity;
         product.stock -= item.quantity;
         await queryRunner.manager.save(Product, product);
       }
 
-      // Actualizar total en el detalle
       savedOrderDetail.price = total;
       await queryRunner.manager.save(OrderDetail, savedOrderDetail);
 
-      // 4. Procesar pago con PayPal
       const paypalOrder = await this.paypalService.createOrder(total, 'USD');
       const approveLink = paypalOrder.links.find(link => link.rel === 'approve');
 
-      // Guardar ID de PayPal en la orden
       savedOrder.paypalData = {
-        orderId: paypalOrder.id // <- Propiedad ahora permitida
+        orderId: paypalOrder.id
       };
       await queryRunner.manager.save(Order, savedOrder);
 
       await queryRunner.commitTransaction();
 
-      // Obtener items con relaciones para la respuesta
       const itemsWithProducts = await this.orderItemRepository.find({
         where: { orderDetail: { id: savedOrderDetail.id } },
         relations: ['product']
@@ -129,10 +118,9 @@ export class OrdersService {
       throw new ConflictException('El pago no se completó correctamente en PayPal');
     }
 
-    // Actualizar orden con datos de PayPal
     const updatedOrder = await this.ordersRepository.update(
       { id: captureDto.localOrderId },
-      { 
+      {
         status: OrderStatus.PAID,
         paypalData: {
           orderId: captureDto.orderId,
@@ -147,7 +135,6 @@ export class OrdersService {
       throw new NotFoundException(`Orden ${captureDto.localOrderId} no encontrada`);
     }
 
-    // Obtener orden actualizada con relaciones
     const order = await this.ordersRepository.findOne({
       where: { id: captureDto.localOrderId },
       relations: ['orderDetail', 'orderDetail.items', 'orderDetail.items.product']
@@ -193,9 +180,13 @@ export class OrdersService {
     return order;
   }
 
+  async getOrderDetails(orderId: string) {
+    return this.findOne(orderId);
+  }
+
   async update(id: string, updateOrderDto: UpdateOrderDto) {
     const result = await this.ordersRepository.update(id, updateOrderDto);
-    
+
     if (result.affected === 0) {
       throw new NotFoundException(`Orden ${id} no encontrada`);
     }
