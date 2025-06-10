@@ -221,30 +221,30 @@ export class OrdersRepository {
    * Borrado lógico de una orden (marcar como inactiva)
    */
   async remove(id: string) {
-    try {
-      const order = await this.repository.findOne({
-        where: { id },
-        relations: ['orderDetail', 'orderDetail.items'],
-      });
+  try {
+    const order = await this.repository.findOne({
+      where: { id, isActive: true }, // 🔹 solo buscamos órdenes activas
+      relations: ['orderDetail', 'orderDetail.items'],
+    });
 
-      if (!order) {
-        throw new NotFoundException(`Orden con ID ${id} no encontrada`);
-      }
-
-      order.isActive = false;
-      await this.repository.save(order);
-
-      return {
-        message: 'Orden desactivada (borrado lógico)',
-        orderId: id,
-        isActive: false,
-        dateDeleted: new Date(),
-      };
-    } catch (error) {
-      if (error instanceof NotFoundException) throw error;
-      throw new InternalServerErrorException('Error al desactivar la orden');
+    if (!order) {
+      throw new NotFoundException(`Orden con ID ${id} no encontrada o ya inactiva`);
     }
+
+    order.isActive = false; // 🔸 marcamos como inactiva
+    await this.repository.save(order);
+
+    return {
+      message: 'Orden desactivada (borrado lógico)',
+      orderId: id,
+      isActive: false,
+      dateDeleted: new Date(),
+    };
+  } catch (error) {
+    if (error instanceof NotFoundException) throw error;
+    throw new InternalServerErrorException('Error al desactivar la orden');
   }
+}
 
   /**
    * Obtiene todas las órdenes, activas e inactivas, con detalles completos (para admins)

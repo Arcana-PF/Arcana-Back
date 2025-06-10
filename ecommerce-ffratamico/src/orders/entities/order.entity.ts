@@ -13,7 +13,7 @@ export class Order {
 
 
   @Column({ default: true })
-    isActive: boolean; // ← Nuevo campo para borrado lógico
+  isActive: boolean; // ← Nuevo campo para borrado lógico
 
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
   status: OrderStatus;

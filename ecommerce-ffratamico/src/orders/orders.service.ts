@@ -15,6 +15,7 @@ import { PayPalService } from './paypal.service';
 import { OrderStatus } from './enums/order-status.enum';
 import { PayPalCaptureDto } from './dto/paypal-capture.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { OrdersRepository } from './orders.repository';
 
 @Injectable()
 export class OrdersService {
@@ -28,7 +29,8 @@ export class OrdersService {
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
     private readonly paypalService: PayPalService,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    private readonly ordersRepositoryCustom: OrdersRepository
   ) {}
 
   async createOrderWithPayment(newOrder: CreateOrderDto) {
@@ -185,17 +187,10 @@ export class OrdersService {
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto) {
-    const result = await this.ordersRepository.update(id, updateOrderDto);
-
-    if (result.affected === 0) {
-      throw new NotFoundException(`Orden ${id} no encontrada`);
-    }
-
-    return this.findOne(id);
+    return await this.ordersRepositoryCustom.update(id, updateOrderDto);
   }
 
   async remove(id: string) {
-    const order = await this.findOne(id);
-    return this.ordersRepository.softRemove(order);
+  return await this.ordersRepositoryCustom.remove(id);
   }
 }
