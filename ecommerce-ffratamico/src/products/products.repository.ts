@@ -104,19 +104,65 @@ export class ProductsRepository {
   }
 
   async deleteProduct(id: string) {
-    const exists = await this.repository.findOne({where:{id}});
-    if(!exists) throw new NotFoundException("El producto que desea borrar no existe");
-    await this.repository.delete(id);
-    return id;
+    const exists = await this.repository.findOne({ where: { id } });
+
+    if (!exists) {
+      throw new NotFoundException("El producto que desea borrar no existe");
+    }
+
+    // 🔁 Verificamos si ya está desactivado
+    if (!exists.isActive) {
+      throw new ConflictException("El producto ya está desactivado");
+    }
+
+    // ✅ Borrado lógico: seteamos isActive en false
+    exists.isActive = false;
+    await this.repository.save(exists);
+
+    return {
+      message: 'Producto desactivado correctamente',
+      productId: id,
+      isActive: false,
+      dateDeleted: new Date(), // opcional
+    };
   }
 
-  async updateProduct(id: string, updateProduct: UpdateProductDto) {
-    const exists = await this.repository.findOne({where:{id}});
-    if(!exists) throw new NotFoundException("El producto que desea modificar no existe");
+  async updateProduct(id: string, updateProductDto: UpdateProductDto) {
+    const exists = await this.repository.findOne({
+      where: { id },
+      relations: ['categories'],
+    });
 
-    const updatedProduct = Object.assign(exists, updateProduct);
-    await this.repository.save(updatedProduct);
-    return id;
+    if (!exists) throw new NotFoundException('El producto que desea modificar no existe');
+
+    // ✅ NUEVO BLOQUE: actualizar categorías si vienen en el DTO
+    if (updateProductDto.categoryNames) {
+      const allCategories = await this.categoryRepository.getCategories();
+
+      const matchedCategories = allCategories.filter(cat =>
+        updateProductDto.categoryNames.some(
+          name => this.normalize(cat.name) === this.normalize(name)
+        )
+      );
+
+      if (matchedCategories.length !== updateProductDto.categoryNames.length) {
+        throw new NotFoundException('Una o más categorías no existen');
+      }
+
+      exists.categories = matchedCategories; // ✅ Se reasignan las categorías encontradas
+    }
+    // ✅ ACTUALIZAR OTROS CAMPOS DEL PRODUCTO
+    const { categoryNames, ...rest } = updateProductDto; // Excluimos categoryNames
+
+    Object.assign(exists, updateProductDto);
+    await this.repository.save(exists);
+
+    const updated = await this.repository.findOne({
+      where: { id },
+      relations: ['categories'],
+    });
+
+    return updated;
   }
 
   private normalize(value: string): string {

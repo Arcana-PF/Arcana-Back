@@ -29,7 +29,7 @@ export class Product {
   quantity: number;
 
   @Column({nullable: true})
-  score: number;
+  rating: number;
 
   @ManyToMany(() => Category, (category) => category.products, { eager: true })
   @JoinTable()

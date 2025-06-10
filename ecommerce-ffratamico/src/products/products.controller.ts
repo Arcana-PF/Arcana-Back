@@ -44,14 +44,14 @@ export class ProductsController {
 
   @Delete(':id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
+  // @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
   async remove(@Param() param: IdParamDTO) {
     return await this.productsService.removeProduct(param.id);
   }
 
   @Put(':id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
+  // @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
   async update(@Param() param: IdParamDTO, @Body() updateProduct: UpdateProductDto) {
     return await this.productsService.update(param.id, updateProduct)
   }
