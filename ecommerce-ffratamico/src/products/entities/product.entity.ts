@@ -36,6 +36,4 @@ export class Product {
   @ManyToOne(() => Category, (category) => category.products, { nullable: false })
   category: Category;
 
-  @ManyToMany(() => OrderDetail, (orderDetail) => orderDetail.products)
-  orderDetails: OrderDetail[];
 }
