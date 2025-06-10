@@ -1,4 +1,3 @@
-
 import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -15,9 +14,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  /* ENDPOINTS NUEVOS AGREGADOS */
-  
-  // POST /orders - Crear nueva orden (existente)
+ 
   @Post()
   // @UseGuards(AuthGuard)
   async createOrder(@Body() newOrder: CreateOrderDto) {
@@ -38,9 +35,9 @@ export class OrdersController {
 
   @Get(':id')
   // @UseGuards(AuthGuard)
-   async getOrderDetails(@Param('id') orderId: string) {
+  async getOrderDetails(@Param('id') orderId: string) {
     return this.ordersService.getOrderDetails(orderId);
-   }
+  }
 
   @Patch(':id')
   // @UseGuards(AuthGuard)
