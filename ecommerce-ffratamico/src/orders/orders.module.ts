@@ -8,10 +8,12 @@ import { UsersModule } from 'src/users/users.module';
 import { ProductsModule } from 'src/products/products.module';
 import { OrderDetailRepository } from './orderDetail.repository';
 import { OrderDetail } from './entities/orderDetail.entity';
+import { PayPalService } from './paypal.service';
+import { OrderDetailProduct } from './entities/order-detail-product.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, OrderDetail]), UsersModule, ProductsModule],
+  imports: [TypeOrmModule.forFeature([Order, OrderDetail, OrderDetailProduct]), UsersModule, ProductsModule],
   controllers: [OrdersController],
-  providers: [OrdersService, OrdersRepository, OrderDetailRepository],
+  providers: [OrdersService, OrdersRepository, OrderDetailRepository, PayPalService],
 })
 export class OrdersModule {}

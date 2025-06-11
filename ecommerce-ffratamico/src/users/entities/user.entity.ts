@@ -1,4 +1,3 @@
-import { Role } from "src/config/enum/role.enum";
 import { Order } from "src/orders/entities/order.entity";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
@@ -26,6 +25,9 @@ export class User {
 
   @Column({ type: 'boolean', default: false })
   isAdmin: boolean;
+
+  @Column({default: true})
+  isActive: boolean
 
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];

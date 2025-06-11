@@ -2,53 +2,37 @@ import { ConflictException, Injectable, NotFoundException } from "@nestjs/common
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { UpdateUserDTO } from "./dto/update-user.dto";
 import { InjectRepository } from "@nestjs/typeorm";
-import { User } from "./entities/user.entity";
 import { Repository } from "typeorm";
 import { Order } from "src/orders/entities/order.entity";
+import { User } from "./entities/user.entity";
+import { MockUsers } from "./mock/mock.users.data";
 
 @Injectable()
 export class UserRepository{
 
     constructor(@InjectRepository(User) private readonly repository: Repository<User>){}
 
-    private readonly mockUsers =[
-        {
-            email: `fausto@mail.com`,
-            name: `Fausto Fratamico`,
-            password: `123456`,
-            orders: []
-        },
-        {
-            email: `gisela@mail.com`,
-            name: `Gisela torrez`,
-            password: `456789`,
-            orders: []
-        },
-        {
-            email: `valentino@mail.com`,
-            name: `Valentino Sparvoli`,
-            password: `789123`,
-            orders: []
-        },
-    ];
-
-    async addUsers(){
-        for(const users of this.mockUsers){
-            const exists = await this.repository.findOne({where: {email: users.email}});
-            if(!exists){await this.repository.save(users)}
-        }
-    }
+    private readonly mockUsers = MockUsers;
     
     async getUsers(){
        const users = await this.repository.find();
-       return users.map(({password, ...user}) => user);       
+       return users.map(({password, isAdmin, ...user}) => user);       
     }
     
     async getUsersWithPagination(page: number, limit: number) {
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
-        const users = await this.repository.find();
-        return users.slice(startIndex, endIndex).map(({ password, ...user }) => user);
+        const [users, total] = await this.repository.findAndCount({
+            skip: (page - 1) * limit,
+            take: limit,
+        });
+
+        const sanitizedUsers = users.map(({ password, ...user }) => user);
+
+        return {
+            total,
+            page,
+            limit,
+            data: sanitizedUsers,
+        };
     }
 
     async getById(id: string) {
@@ -67,19 +51,42 @@ export class UserRepository{
         return newUser;
     }
 
-    async deleteUser(id: string){
-        const exists = await this.repository.findOne({where:{id}});
-        if(!exists) throw new NotFoundException('el usuario no existe');
-        await this.repository.delete(id);
-        return id;
+    async deleteUser(id: string) {
+        const user = await this.repository.findOne({ where: { id } });
+
+        if (!user) throw new NotFoundException('El usuario no existe');
+
+        user.isActive = false; // ← Marcamos como inactivo
+
+        await this.repository.save(user); // ← Guardamos el cambio
+
+        return { message: `Usuario con ID ${id} desactivado correctamente.` };
     }
 
-    async updateUser(id: string, updateUser: UpdateUserDTO){
-        const exists = await this.repository.findOne({where:{id}})
-        if(!exists) throw new NotFoundException('el usuario no existe');
-        const updatedUser = Object.assign(exists, updateUser);
-        await this.repository.save(updatedUser);
-        return id;
+    async updateUser(id: string, updateUser: UpdateUserDTO) {
+        // Buscamos solo usuarios activos
+        const user = await this.repository.findOne({ where: { id, isActive: true } }); // ← agregado isActive: true
+
+        if (!user) {
+            throw new NotFoundException('El usuario no existe o está inactivo'); // ← mensaje más claro
+        }
+
+        Object.assign(user, updateUser); // ← nombre más representativo que "exists"
+
+        await this.repository.save(user);
+
+        return {
+            message: `Usuario con ID ${id} actualizado correctamente.`,
+            user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            address: user.address,
+            phone: user.phone,
+            isAdmin: user.isAdmin,
+            isActive: user.isActive,
+            }, // ← opcional: devolver los datos actualizados (sin password)
+        };
     }
 
     async findOneByEmail(email: string) {
