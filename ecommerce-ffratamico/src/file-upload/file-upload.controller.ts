@@ -5,6 +5,7 @@ import { IdParamDTO } from 'src/OthersDtos/id-param.dto';
 import { ImageUploadPipe } from './pipes/image-upload/image-upload.pipe';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { IsAdminGuard } from 'src/auth/guard/is-admin/isAdmin.guard';
 
 @ApiBearerAuth()
 @ApiTags('File Upload')
@@ -13,7 +14,7 @@ export class FileUploadController {
   constructor(private readonly fileUploadService: FileUploadService) {}
 
   @Post('uploadImage/:id')
-  // @UseGuards(AuthGuard) // Header de autorizacion
+  @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file', {limits: {fileSize: 1 * 1024 * 1024}}))
   @ApiConsumes('multipart/form-data')

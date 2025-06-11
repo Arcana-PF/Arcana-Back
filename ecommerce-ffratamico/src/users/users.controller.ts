@@ -15,6 +15,7 @@ import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { IdParamDTO } from 'src/OthersDtos/id-param.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsAdminGuard } from 'src/auth/guard/is-admin/isAdmin.guard';
+import { IsUserGuard } from 'src/auth/guard/is-user/is-user.guard';
 
 @ApiBearerAuth()
 @ApiTags('Users')
@@ -43,19 +44,14 @@ export class UsersController {
     return await this.usersService.getUserById(param.id);
   }
 
-  @Post('seeder')
-  addUsers(){
-    return this.usersService.addUsers();
-  }
-
   @Delete(':id')
-  @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
+  @UseGuards(AuthGuard, IsUserGuard) // Header de autorizacion
   async deleteUser(@Param() param: IdParamDTO) {
     return await this.usersService.deleteUser(param.id);
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard) // Header de autorizacion
+  @UseGuards(AuthGuard, IsUserGuard) // Header de autorizacion
   async updateUser(
     @Param() param: IdParamDTO,
     @Body() updateUser: UpdateUserDTO,

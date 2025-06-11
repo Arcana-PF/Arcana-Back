@@ -26,6 +26,9 @@ export class User {
   @Column({ type: 'boolean', default: false })
   isAdmin: boolean;
 
+  @Column({default: true})
+  isActive: boolean
+
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 }

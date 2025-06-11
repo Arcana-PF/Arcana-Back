@@ -26,32 +26,36 @@ export class ProductsController {
     }
 
   @Get(':id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
   async getProductById(@Param() param: IdParamDTO) {
     return await this.productsService.getProductById(param.id);
   }
 
   @Post()
   @ApiBearerAuth()
-  // @UseGuards(AuthGuard) // Header de autorizacion
+  @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
   async create(@Body() newProduct: CreateProductDto) {
     return await this.productsService.createProduct(newProduct);
   }
 
   @Post('seeder')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
   async addProductsSeeder(){
     return await this.productsService.addProductsSeeder();
   }
 
   @Delete(':id')
   @ApiBearerAuth()
-  // @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
+  @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
   async remove(@Param() param: IdParamDTO) {
     return await this.productsService.removeProduct(param.id);
   }
 
   @Put(':id')
   @ApiBearerAuth()
-  // @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
+  @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
   async update(@Param() param: IdParamDTO, @Body() updateProduct: UpdateProductDto) {
     return await this.productsService.update(param.id, updateProduct)
   }

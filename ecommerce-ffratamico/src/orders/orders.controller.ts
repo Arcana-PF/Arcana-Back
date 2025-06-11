@@ -7,6 +7,7 @@ import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { PayPalCaptureDto } from './dto/paypal-capture.dto';
 
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { IsAdminGuard } from 'src/auth/guard/is-admin/isAdmin.guard';
 
 @ApiBearerAuth()
 @ApiTags('Orders')
@@ -16,37 +17,37 @@ export class OrdersController {
 
  
   @Post()
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   async createOrder(@Body() newOrder: CreateOrderDto) {
     return this.ordersService.createOrderWithPayment(newOrder);
   }
 
   @Get()
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, IsAdminGuard)
   async findAll() {
     return await this.ordersService.findAll();
   }
 
   @Post('paypal/capture')
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   async capturePayPalOrder(@Body() captureDto: PayPalCaptureDto) {
     return this.ordersService.capturePayPalOrder(captureDto);
   }
 
   @Get(':id')
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, IsAdminGuard)
   async getOrderDetails(@Param('id') orderId: string) {
     return this.ordersService.getOrderDetails(orderId);
   }
 
   @Patch(':id')
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, IsAdminGuard)
   async update(@Param() param: IdParamDTO, @Body() updateOrderDto: UpdateOrderDto) {
     return await this.ordersService.update(param.id, updateOrderDto);
   }
 
   @Delete(':id')
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   async remove(@Param() param: IdParamDTO) {
     return await this.ordersService.remove(param.id);
   }
