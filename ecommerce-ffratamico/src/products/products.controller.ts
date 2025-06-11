@@ -27,7 +27,7 @@ export class ProductsController {
 
   @Get(':id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
+  @UseGuards(AuthGuard) // Header de autorizacion
   async getProductById(@Param() param: IdParamDTO) {
     return await this.productsService.getProductById(param.id);
   }
