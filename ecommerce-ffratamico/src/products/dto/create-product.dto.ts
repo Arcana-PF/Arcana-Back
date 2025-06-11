@@ -1,4 +1,4 @@
-import { IsInt, IsNumber, IsString, IsUUID, MaxLength } from "class-validator"
+import { ArrayMinSize, IsArray, IsInt, IsNumber, IsString, IsUUID, MaxLength } from "class-validator"
 
 export class CreateProductDto {
     @IsString()
@@ -17,6 +17,8 @@ export class CreateProductDto {
     @IsString()
     imgUrl: string;
 
-    @IsString()
-    categoryName: string;
+    @IsArray()
+    @ArrayMinSize(1)
+    @IsString({ each: true })
+    categoryNames: string[];
 }

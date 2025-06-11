@@ -9,6 +9,7 @@ import { UserRepository } from 'src/users/users.repository';
 import { SignUpDTO } from './dto/signup-auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { MockUsers } from 'src/users/mock/mock.users.data';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +17,21 @@ export class AuthService {
     private readonly userRepository: UserRepository,
     private readonly jwtService: JwtService,
   ) {}
+
+  private readonly mockUsers: SignUpDTO[] = MockUsers;
+
+  async addUsers() {
+    for (const user of this.mockUsers) {
+      try {
+        await this.signUp(user);
+      } catch (error) {
+        // Si ya existe el usuario, lo ignoramos
+        if (error instanceof ConflictException) continue;
+        // Otros errores se relanzan
+        throw error;
+      }
+    }
+  }
 
   async signUp(newUser: SignUpDTO) {
     const emailExists = await this.userRepository.findOneByEmail(newUser.email);

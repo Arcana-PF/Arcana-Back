@@ -4,19 +4,15 @@ import { Category } from "./entities/categories.entity";
 import { Repository } from "typeorm";
 import { CreateCategoryDto } from "./dto/create-category.dto";
 import { UpdateCategoryDto } from "./dto/update-category.dto";
+import { MockCategories } from "./mock/mock.categories.data";
 
 
 @Injectable()
 export class CategoryRepository{
   
-  private readonly mockCategories = [
-    { name: 'Velas' },
-    { name: 'Velones' },
-    { name: 'saumerios' },
-    { name: 'figuras' },
-  ];
-  
   constructor(@InjectRepository(Category) private repository: Repository<Category>) {}
+
+  private readonly mockCategories = MockCategories;
 
   async getCategories() {
     return this.repository.find();
@@ -43,10 +39,6 @@ export class CategoryRepository{
   }
 }
 
-  async findOneByName(name: string): Promise<Category | null> {
-    return await this.repository.findOne({ where: { name } });
-  }
-
   async addCategory(newCategory: CreateCategoryDto): Promise<Category> {
     const normalizedInput = this.normalize(newCategory.name);
 
@@ -62,22 +54,6 @@ export class CategoryRepository{
 
     const category = this.repository.create({ name: formattedName });
     return await this.repository.save(category);
-  }
-
-  
-  //Elimina tildes, espacios extra y pone todo en minúscula
-  private normalize(value: string): string {
-    return value
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // elimina acentos
-      .trim()
-      .toLowerCase();
-  }
-
- //Capitaliza: primera letra en mayúscula, resto en minúscula
-  private capitalize(value: string): string {
-    const cleaned = value.trim().toLowerCase();
-    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
   }
 
   async updateCategory(updateCategory: UpdateCategoryDto): Promise<Category> {
@@ -139,6 +115,21 @@ export class CategoryRepository{
       categoryId: id
     };
 
+  }
+
+   //Elimina tildes, espacios extra y pone todo en minúscula
+  private normalize(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // elimina acentos
+      .trim()
+      .toLowerCase();
+  }
+
+ //Capitaliza: primera letra en mayúscula, resto en minúscula
+  private capitalize(value: string): string {
+    const cleaned = value.trim().toLowerCase();
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
   }
 
 }
