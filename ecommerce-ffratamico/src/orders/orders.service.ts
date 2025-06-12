@@ -6,32 +6,231 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
+
 import { Order } from './entities/order.entity';
 import { OrderDetail } from './entities/orderDetail.entity';
 import { OrderDetailProduct } from './entities/order-detail-product.entity';
 import { Product } from '../products/entities/product.entity';
+
+
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PayPalService } from './paypal.service';
 import { OrderStatus } from './enums/order-status.enum';
 import { PayPalCaptureDto } from './dto/paypal-capture.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrdersRepository } from './orders.repository';
+import { Cart } from 'src/carrito/entitites/cart.entity';
+import { CartItem } from 'src/carrito/entitites/cart-item-entity';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
+
     @InjectRepository(OrderDetail)
     private readonly orderDetailRepository: Repository<OrderDetail>,
+
     @InjectRepository(OrderDetailProduct)
     private readonly orderItemRepository: Repository<OrderDetailProduct>,
+
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
+
+    @InjectRepository(Cart)
+    private readonly cartRepository: Repository<Cart>,
+
+    @InjectRepository(CartItem)
+    private readonly cartItemRepository: Repository<CartItem>,
+
     private readonly paypalService: PayPalService,
     private readonly dataSource: DataSource,
     private readonly ordersRepositoryCustom: OrdersRepository
   ) {}
+
+  // --- Métodos del carrito ---
+
+  async getActiveCartByUser(userId: string): Promise<Cart> {
+    const cart = await this.cartRepository.findOne({
+      where: { user: { id: userId }, isActive: true },
+      relations: ['items', 'items.product']
+    });
+
+    if (!cart) {
+      const newCart = this.cartRepository.create({
+        user: { id: userId } as any,
+        isActive: true,
+        items: []
+      });
+      return this.cartRepository.save(newCart);
+    }
+
+    return cart;
+  }
+
+  async addItemToCart(userId: string, productId: string, quantity: number): Promise<Cart> {
+    if (quantity <= 0) throw new ConflictException('La cantidad debe ser mayor que cero');
+
+    const cart = await this.getActiveCartByUser(userId);
+
+    const product = await this.productsRepository.findOne({ where: { id: productId } });
+    if (!product) throw new NotFoundException('Producto no encontrado');
+    if (!product.isActive) throw new ConflictException('Producto no está activo');
+
+    let cartItem = cart.items.find(item => item.product.id === productId);
+
+    if (cartItem) {
+      cartItem.quantity += quantity;
+      if (cartItem.quantity > product.stock) throw new ConflictException('Stock insuficiente');
+      await this.cartItemRepository.save(cartItem);
+    } else {
+      if (quantity > product.stock) throw new ConflictException('Stock insuficiente');
+      cartItem = this.cartItemRepository.create({
+        cart,
+        product,
+        quantity
+      });
+      await this.cartItemRepository.save(cartItem);
+      cart.items.push(cartItem);
+    }
+
+    return cart;
+  }
+
+  async updateCartItemQuantity(userId: string, itemId: string, quantity: number): Promise<Cart> {
+    if (quantity < 0) throw new ConflictException('La cantidad no puede ser negativa');
+
+    const cart = await this.getActiveCartByUser(userId);
+
+    const item = cart.items.find(i => i.id === itemId);
+    if (!item) throw new NotFoundException('Item no encontrado en carrito');
+
+    if (quantity === 0) {
+      await this.cartItemRepository.delete(itemId);
+      cart.items = cart.items.filter(i => i.id !== itemId);
+    } else {
+      if (quantity > item.product.stock) throw new ConflictException('Stock insuficiente');
+      item.quantity = quantity;
+      await this.cartItemRepository.save(item);
+    }
+
+    return cart;
+  }
+
+  async removeCartItem(userId: string, itemId: string): Promise<Cart> {
+    const cart = await this.getActiveCartByUser(userId);
+    const item = cart.items.find(i => i.id === itemId);
+    if (!item) throw new NotFoundException('Item no encontrado en carrito');
+
+    await this.cartItemRepository.delete(itemId);
+    cart.items = cart.items.filter(i => i.id !== itemId);
+    return cart;
+  }
+
+  async clearCart(userId: string): Promise<Cart> {
+    const cart = await this.getActiveCartByUser(userId);
+
+    if (cart.items.length > 0) {
+      const itemIds = cart.items.map(i => i.id);
+      await this.cartItemRepository.delete(itemIds);
+      cart.items = [];
+    }
+
+    return cart;
+  }
+
+  async getOrderDetails(orderId: string) {
+  return this.findOne(orderId);
+}
+  // --- Crear orden desde carrito ---
+
+  async createOrderFromCart(userId: string) {
+    const cart = await this.getActiveCartByUser(userId);
+
+    if (!cart || cart.items.length === 0) {
+      throw new ConflictException('El carrito está vacío');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const order = new Order();
+      order.user = { id: userId } as any;
+      order.status = OrderStatus.PENDING;
+
+      const orderDetail = new OrderDetail();
+      orderDetail.price = 0;
+
+      const savedOrder = await queryRunner.manager.save(Order, order);
+      orderDetail.order = savedOrder;
+      const savedOrderDetail = await queryRunner.manager.save(OrderDetail, orderDetail);
+
+      let total = 0;
+
+      for (const item of cart.items) {
+        const product = await queryRunner.manager.findOne(Product, {
+          where: { id: item.product.id }
+        });
+
+        if (!product) throw new NotFoundException(`Producto ${item.product.name} no encontrado`);
+        if (!product.isActive) throw new ConflictException(`Producto ${product.name} no está disponible`);
+        if (product.stock < item.quantity) throw new ConflictException(`Stock insuficiente para ${product.name}`);
+
+        const orderItem = new OrderDetailProduct();
+        orderItem.product = product;
+        orderItem.quantity = item.quantity;
+        orderItem.priceAtPurchase = product.price;
+        orderItem.orderDetail = savedOrderDetail;
+
+        await queryRunner.manager.save(OrderDetailProduct, orderItem);
+
+        product.stock -= item.quantity;
+        await queryRunner.manager.save(Product, product);
+
+        total += product.price * item.quantity;
+      }
+
+      savedOrderDetail.price = total;
+      await queryRunner.manager.save(OrderDetail, savedOrderDetail);
+
+      const paypalOrder = await this.paypalService.createOrder(total, 'USD');
+      const approveLink = paypalOrder.links.find(link => link.rel === 'approve');
+
+      savedOrder.paypalData = {
+        orderId: paypalOrder.id
+      };
+      await queryRunner.manager.save(Order, savedOrder);
+
+      // Desactivar carrito
+      cart.isActive = false;
+      await queryRunner.manager.save(Cart, cart);
+
+      await queryRunner.commitTransaction();
+
+      return {
+        success: true,
+        orderId: savedOrder.id,
+        paypalId: paypalOrder.id,
+        total,
+        redirectUrl: approveLink?.href,
+        items: cart.items.map(item => ({
+          productId: item.product.id,
+          name: item.product.name,
+          quantity: item.quantity,
+          price: item.product.price
+        }))
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException(`Error al crear orden desde carrito: ${error.message}`);
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // --- Métodos originales que ya tenías ---
 
   async createOrderWithPayment(newOrder: CreateOrderDto) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -178,19 +377,21 @@ export class OrdersService {
     if (!order) {
       throw new NotFoundException(`Orden ${id} no encontrada`);
     }
-
     return order;
   }
 
-  async getOrderDetails(orderId: string) {
-    return this.findOne(orderId);
-  }
-
   async update(id: string, updateOrderDto: UpdateOrderDto) {
-    return await this.ordersRepositoryCustom.update(id, updateOrderDto);
+    const order = await this.ordersRepository.preload({ id, ...updateOrderDto });
+
+    if (!order) {
+      throw new NotFoundException(`Orden ${id} no encontrada`);
+    }
+
+    return this.ordersRepository.save(order);
   }
 
   async remove(id: string) {
-  return await this.ordersRepositoryCustom.remove(id);
+    const order = await this.findOne(id);
+    return this.ordersRepository.remove(order);
   }
 }
