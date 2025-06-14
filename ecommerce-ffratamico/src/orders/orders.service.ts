@@ -1,9 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException
-} from '@nestjs/common';
+import {ConflictException,Injectable,InternalServerErrorException,NotFoundException} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Order } from './entities/order.entity';
@@ -22,16 +17,21 @@ export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
+
     @InjectRepository(OrderDetail)
     private readonly orderDetailRepository: Repository<OrderDetail>,
+
     @InjectRepository(OrderDetailProduct)
     private readonly orderItemRepository: Repository<OrderDetailProduct>,
+
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
+
     private readonly paypalService: PayPalService,
     private readonly dataSource: DataSource,
     private readonly ordersRepositoryCustom: OrdersRepository
   ) {}
+
 
   async createOrderWithPayment(newOrder: CreateOrderDto) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -163,6 +163,17 @@ export class OrdersService {
     };
   }
 
+    async getOrderDetails(orderId: string) {
+    const order = await this.ordersRepository.findOne({
+      where: { id: orderId },
+      relations: ['user', 'orderDetail', 'orderDetail.items'], // Ajusta según tus relaciones reales
+    });
+
+    if (!order) throw new NotFoundException('Orden no encontrada');
+    return order;
+  }
+
+
   async findAll() {
     return await this.ordersRepository.find({
       relations: ['user', 'orderDetail', 'orderDetail.items', 'orderDetail.items.product']
@@ -178,19 +189,20 @@ export class OrdersService {
     if (!order) {
       throw new NotFoundException(`Orden ${id} no encontrada`);
     }
-
     return order;
   }
 
-  async getOrderDetails(orderId: string) {
-    return this.findOne(orderId);
-  }
-
   async update(id: string, updateOrderDto: UpdateOrderDto) {
-    return await this.ordersRepositoryCustom.update(id, updateOrderDto);
+    const order = await this.ordersRepository.preload({ id, ...updateOrderDto });
+
+    if (!order) {
+      throw new NotFoundException(`Orden ${id} no encontrada`);
+    }
+
+    return this.ordersRepository.save(order);
   }
 
   async remove(id: string) {
-  return await this.ordersRepositoryCustom.remove(id);
+    return this.ordersRepositoryCustom.remove(id);
   }
 }
