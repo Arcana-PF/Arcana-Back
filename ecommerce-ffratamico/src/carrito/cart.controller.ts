@@ -10,23 +10,21 @@ import {
   Req, 
   ForbiddenException 
 } from '@nestjs/common';
-OrdersService
-CreateOrderDto
-UpdateOrderDto
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { OrdersService } from 'src/orders/orders.service';
-import { CreateOrderDto } from 'src/orders/dto/create-order.dto';
-import { UpdateOrderDto } from 'src/orders/dto/update-order.dto';
 import { CartService } from './cart.service';
+import { AddItemToCartDto } from './dto/add-item-to-cart.dto';
+import { IdParamDTO } from 'src/OthersDtos/id-param.dto';
+import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+import { ItemIdParamDto } from './dto/item-id-param.dto';
 
 @ApiBearerAuth()
-@ApiTags('cart')
+@ApiTags('Cart')
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
-@Get('cart')
+  @Get()
   @UseGuards(AuthGuard)
   async getActiveCart(@Req() req) {
     const userId = req.user?.id;
@@ -35,46 +33,34 @@ export class CartController {
     return this.cartService.getActiveCartByUser(userId);
   }
 
-  @Post('cart/items')
+  @Post('items')
   @UseGuards(AuthGuard)
   async addItemToCart(
     @Req() req,
-    @Body() body: { productId: string; quantity: number },
+    @Body() items: AddItemToCartDto,
   ) {
-    const userId = req.user?.id;
-    if (!userId) throw new ForbiddenException('Usuario no autenticado');
-
-    return this.cartService.addItemToCart(userId, body.productId, body.quantity);
+    return this.cartService.addItemToCart(req.user?.id, items);
   }
 
-  @Patch('cart/items/:itemId')
+  @Patch('items/:itemId')
   @UseGuards(AuthGuard)
   async updateCartItem(
     @Req() req,
-    @Param('itemId') itemId: string,
-    @Body() body: { quantity: number },
+    @Param() item: ItemIdParamDto,
+    @Body() updateItem: UpdateCartItemDto,
   ) {
-    const userId = req.user?.id;
-    if (!userId) throw new ForbiddenException('Usuario no autenticado');
-
-    return this.cartService.updateCartItemQuantity(userId, itemId, body.quantity);
+    return this.cartService.updateCartItemQuantity(req.user?.id, item.itemId, updateItem);
   }
 
-  @Delete('cart/items/:itemId')
+  @Delete('items/:itemId')
   @UseGuards(AuthGuard)
-  async removeCartItem(@Req() req, @Param('itemId') itemId: string) {
-    const userId = req.user?.id;
-    if (!userId) throw new ForbiddenException('Usuario no autenticado');
-
-    return this.cartService.removeCartItem(userId, itemId);
+  async removeCartItem(@Req() req, @Param() item: ItemIdParamDto) {
+    return this.cartService.removeCartItem(req.user?.id, item.itemId);
   }
 
-  @Delete('cart')
+  @Delete()
   @UseGuards(AuthGuard)
   async clearCart(@Req() req) {
-    const userId = req.user?.id;
-    if (!userId) throw new ForbiddenException('Usuario no autenticado');
-
-    return this.cartService.clearCart(userId);
+    return this.cartService.clearCart(req.user?.id);
   }
 }

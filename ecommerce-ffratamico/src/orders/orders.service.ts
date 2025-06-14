@@ -1,26 +1,16 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException
-} from '@nestjs/common';
+import {ConflictException,Injectable,InternalServerErrorException,NotFoundException} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-
 import { Order } from './entities/order.entity';
 import { OrderDetail } from './entities/orderDetail.entity';
 import { OrderDetailProduct } from './entities/order-detail-product.entity';
 import { Product } from '../products/entities/product.entity';
-
-
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PayPalService } from './paypal.service';
 import { OrderStatus } from './enums/order-status.enum';
 import { PayPalCaptureDto } from './dto/paypal-capture.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrdersRepository } from './orders.repository';
-import { Cart } from 'src/carrito/entitites/cart.entity';
-import { CartItem } from 'src/carrito/entitites/cart-item-entity';
 
 @Injectable()
 export class OrdersService {
@@ -36,12 +26,6 @@ export class OrdersService {
 
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
-
-    @InjectRepository(Cart)
-    private readonly cartRepository: Repository<Cart>,
-
-    @InjectRepository(CartItem)
-    private readonly cartItemRepository: Repository<CartItem>,
 
     private readonly paypalService: PayPalService,
     private readonly dataSource: DataSource,
@@ -182,7 +166,7 @@ export class OrdersService {
     async getOrderDetails(orderId: string) {
     const order = await this.ordersRepository.findOne({
       where: { id: orderId },
-      relations: ['user', 'orderDetails', 'orderDetails.products'], // Ajusta según tus relaciones reales
+      relations: ['user', 'orderDetail', 'orderDetail.items'], // Ajusta según tus relaciones reales
     });
 
     if (!order) throw new NotFoundException('Orden no encontrada');
@@ -219,7 +203,6 @@ export class OrdersService {
   }
 
   async remove(id: string) {
-    const order = await this.findOne(id);
-    return this.ordersRepository.remove(order);
+    return this.ordersRepositoryCustom.remove(id);
   }
 }
