@@ -1,8 +1,8 @@
-import { 
-  ConflictException, 
-  Injectable, 
-  NotFoundException, 
-  InternalServerErrorException 
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -27,9 +27,6 @@ export class OrdersRepository {
     private readonly orderDetailRepository: OrderDetailRepository,
   ) {}
 
-  /**
-   * Obtiene todas las órdenes activas con sus detalles
-   */
   async findAll(): Promise<Order[]> {
     try {
       return await this.repository.find({
@@ -44,21 +41,90 @@ export class OrdersRepository {
         },
         order: { date: 'DESC' },
       });
-    } catch (error) {
+    } catch {
       throw new InternalServerErrorException('Error al obtener órdenes');
     }
   }
 
-  /**
-   * Crea una orden con detalle de productos y actualiza stock
-   */
+  async getOrCreateCart(userId: string): Promise<Order> {
+    const user = await this.userRepository.getById(userId);
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    let cart = await this.repository.findOne({
+      where: {
+        user: { id: userId },
+        status: OrderStatus.CART,
+        isActive: true,
+      },
+      relations: {
+        orderDetail: {
+          items: { product: true },
+        },
+      },
+    });
+
+    if (!cart) {
+      const orderDetail = this.orderDetailRepository.createOrderDetail({
+        items: [],
+        price: 0,
+      });
+
+      await this.orderDetailRepository.saveOrderDetail(orderDetail);
+
+      cart = this.repository.create({
+        user,
+        orderDetail,
+        status: OrderStatus.CART,
+        isActive: true,
+        date: new Date(),
+      });
+
+      await this.repository.save(cart);
+    }
+
+    return cart;
+  }
+
+  async addProductToCart(userId: string, productId: string, quantity: number): Promise<Order> {
+    const product = await this.productRepository.getProductById(productId);
+    if (!product || !product.isActive) {
+      throw new NotFoundException('Producto no válido o inactivo');
+    }
+
+    const cart = await this.getOrCreateCart(userId);
+
+    const existingItem = cart.orderDetail.items.find(
+      (item) => item.product.id === productId,
+    );
+
+    if (existingItem) {
+      existingItem.quantity += quantity;
+      await this.orderDetailRepository.orderDetailProductRepository.save(existingItem);
+    } else {
+      const newItem = this.orderDetailRepository.orderDetailProductRepository.create({
+        product,
+        quantity,
+        priceAtPurchase: product.price,
+        orderDetail: cart.orderDetail,
+      });
+      await this.orderDetailRepository.orderDetailProductRepository.save(newItem);
+      cart.orderDetail.items.push(newItem);
+    }
+
+    cart.orderDetail.price = cart.orderDetail.items.reduce(
+      (acc, item) => acc + item.quantity * item.priceAtPurchase,
+      0,
+    );
+
+    await this.orderDetailRepository.saveOrderDetail(cart.orderDetail);
+    return this.repository.save(cart);
+  }
+
   async createDatabaseOrder(orderData: CreateOrderDto): Promise<Order> {
-    // Obtener usuario
     const user = await this.userRepository.getById(orderData.userId);
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
-    // Crear un nuevo detalle de orden (vacío por ahora)
-    const orderDetail = this.orderDetailRepository.createOrderDetail({
+    let orderDetail = this.orderDetailRepository.createOrderDetail({
       items: [],
       price: 0,
     });
@@ -67,7 +133,6 @@ export class OrdersRepository {
 
     let totalPrice = 0;
 
-    // Recorrer productos para validar stock y preparar items
     for (const item of orderData.products) {
       const product = await this.productRepository.getProductById(item.productId);
       if (!product || !product.isActive) continue;
@@ -76,11 +141,9 @@ export class OrdersRepository {
         throw new ConflictException(`No hay stock suficiente para el producto ${product.name}`);
       }
 
-      // Actualizar stock
       product.stock -= item.quantity;
       await this.productRepository.updateProduct(product.id, { stock: product.stock });
 
-      // Crear item detalle producto con cantidad y precio al momento de compra
       const orderDetailProduct = this.orderDetailRepository.orderDetailProductRepository.create({
         product,
         quantity: item.quantity,
@@ -88,12 +151,8 @@ export class OrdersRepository {
         orderDetail,
       });
 
-      // Guardar item detalle producto
       await this.orderDetailRepository.orderDetailProductRepository.save(orderDetailProduct);
-
       orderDetail.items.push(orderDetailProduct);
-
-      // Acumular total
       totalPrice += product.price * item.quantity;
     }
 
@@ -101,11 +160,9 @@ export class OrdersRepository {
       throw new ConflictException('Ningún producto tiene stock disponible o válido');
     }
 
-    // Actualizar precio total en detalle de orden
     orderDetail.price = totalPrice;
     await this.orderDetailRepository.saveOrderDetail(orderDetail);
 
-    // Crear orden
     const newOrder = this.repository.create({
       user,
       orderDetail,
@@ -117,9 +174,6 @@ export class OrdersRepository {
     return this.repository.save(newOrder);
   }
 
-  /**
-   * Actualiza el estado de la orden con datos de pago (PayPal)
-   */
   async updateOrderWithPayment(
     orderId: string,
     updateData: {
@@ -136,9 +190,7 @@ export class OrdersRepository {
       relations: ['orderDetail', 'orderDetail.items', 'orderDetail.items.product', 'user'],
     });
 
-    if (!order) {
-      throw new NotFoundException(`Orden ${orderId} no encontrada`);
-    }
+    if (!order) throw new NotFoundException(`Orden ${orderId} no encontrada`);
 
     order.status = updateData.status;
 
@@ -153,9 +205,6 @@ export class OrdersRepository {
     return this.repository.save(order);
   }
 
-  /**
-   * Busca una orden activa por ID con detalle completo
-   */
   async findOne(id: string): Promise<Order> {
     try {
       const order = await this.repository.findOne({
@@ -170,10 +219,7 @@ export class OrdersRepository {
         },
       });
 
-      if (!order) {
-        throw new NotFoundException(`Orden activa con ID ${id} no encontrada`);
-      }
-
+      if (!order) throw new NotFoundException(`Orden activa con ID ${id} no encontrada`);
       return order;
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
@@ -181,9 +227,6 @@ export class OrdersRepository {
     }
   }
 
-  /**
-   * Actualiza campos permitidos de una orden activa
-   */
   async update(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
     try {
       const order = await this.repository.findOne({
@@ -191,94 +234,71 @@ export class OrdersRepository {
         relations: ['user'],
       });
 
-      if (!order) {
-        throw new NotFoundException(`Orden activa con ID ${id} no encontrada`);
-      }
+      if (!order) throw new NotFoundException(`Orden activa con ID ${id} no encontrada`);
 
-      // Actualizar usuario si viene en dto
       if (updateOrderDto.userId) {
         const user = await this.userRepository.getById(updateOrderDto.userId);
         if (!user) throw new NotFoundException('Usuario no encontrado');
         order.user = user;
       }
 
-      // Actualizar estado si viene en dto
       if ('status' in updateOrderDto && updateOrderDto.status !== undefined) {
         order.status = updateOrderDto.status;
       }
 
       await this.repository.save(order);
-      return {
-        ...order,
-      };
+      return { ...order };
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException('Error al actualizar la orden');
     }
   }
 
-  /**
-   * Borrado lógico de una orden (marcar como inactiva)
-   */
   async remove(id: string) {
-  try {
-    const order = await this.repository.findOne({
-      where: { id, isActive: true }, // 🔹 solo buscamos órdenes activas
-      relations: ['orderDetail', 'orderDetail.items'],
-    });
+    try {
+      const order = await this.repository.findOne({
+        where: { id, isActive: true },
+        relations: ['orderDetail', 'orderDetail.items'],
+      });
 
-    if (!order) {
-      throw new NotFoundException(`Orden con ID ${id} no encontrada o ya inactiva`);
+      if (!order) throw new NotFoundException(`Orden con ID ${id} no encontrada o ya inactiva`);
+
+      order.isActive = false;
+      await this.repository.save(order);
+
+      return {
+        message: 'Orden desactivada (borrado lógico)',
+        orderId: id,
+        isActive: false,
+        dateDeleted: new Date(),
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('Error al desactivar la orden');
     }
-
-    order.isActive = false; // 🔸 marcamos como inactiva
-    await this.repository.save(order);
-
-    return {
-      message: 'Orden desactivada (borrado lógico)',
-      orderId: id,
-      isActive: false,
-      dateDeleted: new Date(),
-    };
-  } catch (error) {
-    if (error instanceof NotFoundException) throw error;
-    throw new InternalServerErrorException('Error al desactivar la orden');
   }
-}
 
-  /**
-   * Obtiene todas las órdenes, activas e inactivas, con detalles completos (para admins)
-   */
   async findAllWithInactive(): Promise<Order[]> {
     try {
       return await this.repository.find({
         withDeleted: true,
         relations: ['user', 'orderDetail', 'orderDetail.items', 'orderDetail.items.product'],
       });
-    } catch (error) {
+    } catch {
       throw new InternalServerErrorException('Error al obtener el historial completo');
     }
   }
 
-  /**
-   * Obtiene orden completa con detalles por ID
-   */
   async getFullOrderDetails(orderId: string): Promise<Order> {
     const order = await this.repository.findOne({
       where: { id: orderId },
       relations: ['user', 'orderDetail', 'orderDetail.items', 'orderDetail.items.product'],
     });
 
-    if (!order) {
-      throw new NotFoundException(`Orden ${orderId} no encontrada`);
-    }
-
+    if (!order) throw new NotFoundException(`Orden ${orderId} no encontrada`);
     return order;
   }
 
-  /**
-   * Actualiza solo el estado de una orden
-   */
   async updateOrderStatus(orderId: string, status: OrderStatus): Promise<void> {
     await this.repository.update(orderId, { status });
   }
