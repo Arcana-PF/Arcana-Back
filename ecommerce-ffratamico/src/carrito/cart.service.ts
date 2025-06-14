@@ -22,7 +22,7 @@ import { OrderStatus } from 'src/orders/enums/order-status.enum';
 
 
 @Injectable()
-export class CarritoService {
+export class CartService {
  constructor(
   @InjectRepository(Product)
   private readonly productsRepository: Repository<Product>,

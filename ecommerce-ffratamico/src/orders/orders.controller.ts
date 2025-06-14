@@ -18,14 +18,14 @@ import { PayPalCaptureDto } from './dto/paypal-capture.dto';
 
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsAdminGuard } from 'src/auth/guard/is-admin/isAdmin.guard';
-import { CarritoService } from 'src/carrito/cart.service';
+import { CartService } from 'src/carrito/cart.service';
 
 @ApiBearerAuth()
 @ApiTags('Orders')
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService,
-    private readonly carritoService: CarritoService,
+    private readonly carritoService: CartService,
   ) {}
 
 @Post()

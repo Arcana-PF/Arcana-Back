@@ -18,13 +18,13 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { OrdersService } from 'src/orders/orders.service';
 import { CreateOrderDto } from 'src/orders/dto/create-order.dto';
 import { UpdateOrderDto } from 'src/orders/dto/update-order.dto';
-import { CarritoService } from './cart.service';
+import { CartService } from './cart.service';
 
 @ApiBearerAuth()
 @ApiTags('cart')
 @Controller('cart')
-export class OrdersController {
-  constructor(private readonly cartService: CarritoService) {}
+export class CartController {
+  constructor(private readonly cartService: CartService) {}
 
 @Get('cart')
   @UseGuards(AuthGuard)

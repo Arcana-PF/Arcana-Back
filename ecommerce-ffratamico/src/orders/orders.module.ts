@@ -10,10 +10,13 @@ import { OrderDetailRepository } from './orderDetail.repository';
 import { OrderDetail } from './entities/orderDetail.entity';
 import { PayPalService } from './paypal.service';
 import { OrderDetailProduct } from './entities/order-detail-product.entity';
+import { CartController } from 'src/carrito/cart.controller';
+import { CartService } from 'src/carrito/cart.service';
+import { CartRepository } from 'src/carrito/cart.repository';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Order, OrderDetail, OrderDetailProduct]), UsersModule, ProductsModule],
   controllers: [OrdersController],
-  providers: [OrdersService, OrdersRepository, OrderDetailRepository, PayPalService],
+  providers: [OrdersService, OrdersRepository, OrderDetailRepository, PayPalService, CartController, CartService, CartRepository],
 })
 export class OrdersModule {}
