@@ -16,7 +16,7 @@ export class UserRepository{
     
     async getUsers(){
        const users = await this.repository.find();
-       return users.map(({password, isAdmin, ...user}) => user);       
+       return users.map(({password, ...user}) => user);       
     }
     
     async getUsersWithPagination(page: number, limit: number) {
@@ -40,7 +40,6 @@ export class UserRepository{
         if(!user) throw new NotFoundException("El id del usuario no existe");
         
         delete user.password;
-        delete user.isAdmin;
 
         return user;
     }
