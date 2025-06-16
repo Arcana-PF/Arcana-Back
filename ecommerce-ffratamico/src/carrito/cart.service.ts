@@ -126,7 +126,6 @@ export class CartService {
     return cart;
   }
 
-  // --- Crear orden desde carrito ---
 
   async createOrderFromCart(userId: string) {
     const cart = await this.getActiveCartByUser(userId);
@@ -187,7 +186,6 @@ export class CartService {
       };
       await queryRunner.manager.save(Order, savedOrder);
 
-      // Desactivar carrito
       cart.isActive = false;
       await queryRunner.manager.save(Cart, cart);
 

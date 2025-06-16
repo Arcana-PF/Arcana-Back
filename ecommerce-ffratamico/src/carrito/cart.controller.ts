@@ -45,7 +45,7 @@ export class CartController {
     if (!userId) throw new ForbiddenException('Usuario no autenticado');
 
     return this.cartService.addItemToCart(userId, body.productId, body.quantity);
-  }
+  } 
 
   @Patch('cart/items/:itemId')
   @UseGuards(AuthGuard)
@@ -65,7 +65,6 @@ export class CartController {
   async removeCartItem(@Req() req, @Param('itemId') itemId: string) {
     const userId = req.user?.id;
     if (!userId) throw new ForbiddenException('Usuario no autenticado');
-
     return this.cartService.removeCartItem(userId, itemId);
   }
 
@@ -74,7 +73,6 @@ export class CartController {
   async clearCart(@Req() req) {
     const userId = req.user?.id;
     if (!userId) throw new ForbiddenException('Usuario no autenticado');
-
     return this.cartService.clearCart(userId);
   }
 }

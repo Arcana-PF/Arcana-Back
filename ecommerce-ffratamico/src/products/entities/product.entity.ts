@@ -1,5 +1,5 @@
 // src/products/entities/product.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { Category } from '../../categories/entities/categories.entity';
 
 @Entity({ name: 'products' })
@@ -19,20 +19,12 @@ export class Product {
   @Column('int', { nullable: false })
   stock: number;
 
-  @Column('text', {default: 'https://res.cloudinary.com/dcixxfhx9/image/upload/v1749511642/Imagen_de_WhatsApp_2025-05-24_a_las_11.48.09_49378316_vgginz.jpg'})
+  @Column('text', { default: 'imagen por defecto' })
   imgUrl: string;
 
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({default: 0})
-  quantity: number;
-
-  @Column({nullable: true})
-  rating: number;
-
-  @ManyToMany(() => Category, (category) => category.products, { eager: true })
-  @JoinTable()
-  categories: Category[];
-
+  @ManyToOne(() => Category, (category) => category.products, { nullable: false })
+  category: Category; 
 }
