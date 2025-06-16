@@ -50,14 +50,14 @@ export class AuthService {
     const { password, ...userWithoutPassword } = savedUSer;
 await this.mailService.sendEmail(
   savedUSer.email,
-  '¡Bienvenido a Mi Ecommerce!',
+  '¡Bienvenido a Arcana!',
   `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-    <h2 style="color: #2a7ae2;">¡Bienvenido a Mi Ecommerce!</h2>
+    <h2 style="color:rgb(112, 7, 161);">¡Bienvenido a Arcana!</h2>
     <p>Hola ${savedUSer.name|| savedUSer.email},</p>
     <p>Gracias por registrarte. Estamos felices de tenerte con nosotros.</p>
     <p>Puedes comenzar a comprar desde ya en nuestra tienda online.</p>
-    <p style="margin-top: 30px;">Saludos,<br><strong>El equipo de Mi Ecommerce</strong></p>
+    <p style="margin-top: 30px;">Saludos,<br><strong> Equipo de Arcana</strong></p>
     <hr style="margin-top: 40px;" />
     <small style="color: #888;">Este correo fue enviado automáticamente. Por favor, no respondas.</small>
   </div>

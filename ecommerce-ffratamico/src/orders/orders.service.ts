@@ -154,7 +154,7 @@ export class OrdersService {
 
 const emailHtml = `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-    <h2 style="color: #2a7ae2;">Confirmación de Compra</h2>
+    <h2 style="color:rgb(112, 7, 161);">Confirmación de Compra</h2>
     <p>Hola ${order.user?.name || order.user?.email},</p>
     <p>¡Gracias por tu compra! Aquí tienes el detalle de tu orden:</p>
 
@@ -173,7 +173,7 @@ const emailHtml = `
 
     <p style="margin-top: 20px;"><strong>Total pagado:</strong> $${order.orderDetail.price.toFixed(2)}</p>
 
-    <p style="margin-top: 30px;">Saludos,<br><strong>El equipo de Mi Ecommerce</strong></p>
+    <p style="margin-top: 30px;">Saludos,<br><strong>Equipo de Arcana</strong></p>
     <hr style="margin-top: 40px;" />
     <small style="color: #888;">Este correo fue enviado automáticamente. Por favor, no respondas.</small>
   </div>
@@ -181,7 +181,7 @@ const emailHtml = `
 
 await this.mailService.sendEmail(
   order.user.email,
-  'Confirmación de compra - Mi Ecommerce',
+  'Confirmación de compra - Arcana',
   emailHtml
 );
 

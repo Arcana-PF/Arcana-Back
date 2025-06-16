@@ -20,7 +20,7 @@ export class MailService {
 
   async sendEmail(to: string, subject: string, html: string) {
     const info = await this.transporter.sendMail({
-      from: `"Mi Ecommerce" <${this.configService.get('EMAIL_USER')}>`,
+      from: `"Arcana" <${this.configService.get('EMAIL_USER')}>`,
       to,
       subject,
       html,
