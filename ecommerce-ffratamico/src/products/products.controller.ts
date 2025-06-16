@@ -47,7 +47,7 @@ export class ProductsController {
 
   @Post('rating/:id')
   async addRating(){
-    
+    return;
   }
 
   @Delete(':id')
