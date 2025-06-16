@@ -51,7 +51,7 @@ export class UsersController {
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard) // Header de autorizacion
+  @UseGuards(AuthGuard, IsUserGuard) // Header de autorizacion
   async updateUser(
     @Param() param: IdParamDTO,
     @Body() updateUser: UpdateUserDTO,

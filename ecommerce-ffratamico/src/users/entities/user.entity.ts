@@ -1,4 +1,4 @@
-import { Cart } from "src/carrito/entities/cart.entity";
+import { Cart } from "src/carrito/entitites/cart.entity";
 import { Order } from "src/orders/entities/order.entity";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
