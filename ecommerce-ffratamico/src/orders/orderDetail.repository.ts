@@ -13,16 +13,10 @@ export class OrderDetailRepository {
     public readonly orderDetailProductRepository: Repository<OrderDetailProduct>,
   ) {}
 
-  /**
-   * Crear un nuevo OrderDetail con datos iniciales (por ejemplo, vacío)
-   */
   createOrderDetail(data: Partial<OrderDetail>): OrderDetail {
     return this.orderDetailRepo.create(data);
   }
 
-  /**
-   * Guardar o actualizar un OrderDetail
-   */
   async saveOrderDetail(orderDetail: OrderDetail): Promise<OrderDetail> {
     try {
       return await this.orderDetailRepo.save(orderDetail);
@@ -31,9 +25,7 @@ export class OrderDetailRepository {
     }
   }
 
-  /**
-   * Buscar un OrderDetail por ID con sus items y productos
-   */
+ 
   async findOrderDetailById(id: string): Promise<OrderDetail> {
     const orderDetail = await this.orderDetailRepo.findOne({
       where: { id },
@@ -47,9 +39,7 @@ export class OrderDetailRepository {
     return orderDetail;
   }
 
-  /**
-   * Eliminar un OrderDetail (opcional, si usas borrado lógico quizá no sea necesario)
-   */
+
   async removeOrderDetail(id: string): Promise<void> {
     const result = await this.orderDetailRepo.delete(id);
     if (result.affected === 0) {
