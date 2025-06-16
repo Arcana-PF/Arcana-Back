@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException
@@ -11,14 +12,16 @@ import { Repository, DataSource } from 'typeorm';
 
 
 
-import { Cart } from 'src/carrito/entitites/cart.entity';
-import { CartItem } from 'src/carrito/entitites/cart-item-entity';
+import { Cart } from 'src/carrito/entities/cart.entity';
+import { CartItem } from 'src/carrito/entities/cart-item.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { OrderDetail } from 'src/orders/entities/orderDetail.entity';
 import { OrderDetailProduct } from 'src/orders/entities/order-detail-product.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { PayPalService } from 'src/orders/paypal.service';
 import { OrderStatus } from 'src/orders/enums/order-status.enum';
+import { AddItemToCartDto } from './dto/add-item-to-cart.dto';
+import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
 
 @Injectable()
@@ -55,37 +58,55 @@ export class CartService {
     return cart;
   }
 
-  async addItemToCart(userId: string, productId: string, quantity: number): Promise<Cart> {
-    if (quantity <= 0) throw new ConflictException('La cantidad debe ser mayor que cero');
+  async addItemToCart(userId: string, item: AddItemToCartDto): Promise<Cart> {
+  if (!userId) throw new ForbiddenException('Usuario no autenticado'); 
 
-    const cart = await this.getActiveCartByUser(userId);
+  const { productId, quantity } = item; 
 
-    const product = await this.productsRepository.findOne({ where: { id: productId } });
-    if (!product) throw new NotFoundException('Producto no encontrado');
-    if (!product.isActive) throw new ConflictException('Producto no está activo');
-
-    let cartItem = cart.items.find(item => item.product.id === productId);
-
-    if (cartItem) {
-      cartItem.quantity += quantity;
-      if (cartItem.quantity > product.stock) throw new ConflictException('Stock insuficiente');
-      await this.cartItemRepository.save(cartItem);
-    } else {
-      if (quantity > product.stock) throw new ConflictException('Stock insuficiente');
-      cartItem = this.cartItemRepository.create({
-        cart,
-        product,
-        quantity
-      });
-      await this.cartItemRepository.save(cartItem);
-      cart.items.push(cartItem);
-    }
-
-    return cart;
+  if (typeof quantity !== 'number' || quantity <= 0) {
+    throw new ConflictException('La cantidad debe ser mayor que cero'); 
   }
 
-  async updateCartItemQuantity(userId: string, itemId: string, quantity: number): Promise<Cart> {
-    if (quantity < 0) throw new ConflictException('La cantidad no puede ser negativa');
+  const cart = await this.getActiveCartByUser(userId);
+
+  const product = await this.productsRepository.findOne({ where: { id: productId } }); 
+  if (!product) throw new NotFoundException('Producto no encontrado');
+  if (!product.isActive) throw new ConflictException('Producto no está activo');
+
+  let cartItem = cart.items.find(i => i.product.id === productId);
+
+  if (cartItem) {
+    cartItem.quantity += quantity; // 🟢 `quantity` del DTO
+    if (cartItem.quantity > product.stock) {
+      throw new ConflictException('Stock insuficiente');
+    }
+    await this.cartItemRepository.save(cartItem);
+  } else {
+    if (quantity > product.stock) {
+      throw new ConflictException('Stock insuficiente');
+    }
+
+    cartItem = this.cartItemRepository.create({
+      cart,
+      product,
+      quantity, // 🟢 `quantity` del DTO
+    });
+
+    await this.cartItemRepository.save(cartItem);
+    cart.items.push(cartItem);
+  }
+
+  return cart;
+}
+
+  async updateCartItemQuantity(userId: string, itemId: string, updateItem: UpdateCartItemDto): Promise<Cart> {
+    if (!userId) throw new ForbiddenException('Usuario no autenticado'); 
+
+    const { quantity } = updateItem;
+
+    if (typeof quantity !== 'number' || quantity < 0) {
+      throw new ConflictException('La cantidad no puede ser negativa');
+    }
 
     const cart = await this.getActiveCartByUser(userId);
 
@@ -96,7 +117,10 @@ export class CartService {
       await this.cartItemRepository.delete(itemId);
       cart.items = cart.items.filter(i => i.id !== itemId);
     } else {
-      if (quantity > item.product.stock) throw new ConflictException('Stock insuficiente');
+      if (quantity > item.product.stock) {
+        throw new ConflictException('Stock insuficiente');
+      }
+
       item.quantity = quantity;
       await this.cartItemRepository.save(item);
     }
@@ -105,12 +129,16 @@ export class CartService {
   }
 
   async removeCartItem(userId: string, itemId: string): Promise<Cart> {
+    if (!userId) throw new ForbiddenException('Usuario no autenticado');
+
     const cart = await this.getActiveCartByUser(userId);
     const item = cart.items.find(i => i.id === itemId);
+
     if (!item) throw new NotFoundException('Item no encontrado en carrito');
 
     await this.cartItemRepository.delete(itemId);
     cart.items = cart.items.filter(i => i.id !== itemId);
+
     return cart;
   }
 
