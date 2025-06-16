@@ -103,6 +103,11 @@ export class ProductsRepository {
     return newProductToSave;
   }
 
+  addRating() {
+    throw new Error('Method not implemented.');
+  }
+
+
   async deleteProduct(id: string) {
     const exists = await this.repository.findOne({ where: { id } });
 
@@ -171,6 +176,7 @@ export class ProductsRepository {
     .replace(/[\u0300-\u036f]/g, '')
     .trim()
     .toLowerCase();
-}
+  }
+
 
 }

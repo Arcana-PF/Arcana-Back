@@ -45,6 +45,13 @@ export class ProductsController {
     return await this.productsService.addProductsSeeder();
   }
 
+  @Post('rating')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, IsAdminGuard)
+  async addRating(){
+    return await this.productsService.addRating();
+  } 
+
   @Delete(':id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
