@@ -5,7 +5,6 @@ import { ProductsRepository } from './products.repository';
 
 @Injectable()
 export class ProductsService {
-  
   constructor(private readonly productsRepository: ProductsRepository) { }
 
   async getAll() {
@@ -34,10 +33,6 @@ export class ProductsService {
 
   async update(id: string, updateProduct: UpdateProductDto) {
     return await this.productsRepository.updateProduct(id, updateProduct);
-  }
-
-  async addRating() {
-    return await this.productsRepository.addRating();
   }
 
 }
