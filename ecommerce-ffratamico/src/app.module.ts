@@ -10,6 +10,7 @@ import { postgresDataSourceConfig } from 'src/config/data-source';
 import { CloudinaryService } from './services/cloudinary/cloudinary.service';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { JwtModule } from '@nestjs/jwt';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { JwtModule } from '@nestjs/jwt';
     CategoriesModule,
     OrdersModule,
     FileUploadModule,
+    MailModule,
     JwtModule.register({
       global: true,
       signOptions: {expiresIn: '1h'},
