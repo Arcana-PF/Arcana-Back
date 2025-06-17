@@ -5,6 +5,7 @@ import { ProductsRepository } from './products.repository';
 
 @Injectable()
 export class ProductsService {
+  
   constructor(private readonly productsRepository: ProductsRepository) { }
 
   async getAll() {
@@ -33,6 +34,10 @@ export class ProductsService {
 
   async update(id: string, updateProduct: UpdateProductDto) {
     return await this.productsRepository.updateProduct(id, updateProduct);
+  }
+
+  rateProduct(id: any, id1: string, score: number) {
+    throw new Error('Method not implemented.');
   }
 
 }
