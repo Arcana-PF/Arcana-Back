@@ -34,86 +34,29 @@ export class OrdersService {
     private readonly mailService: MailService,
   ) {}
 
+async initiatePayPalForOrder(orderId: string) {
+  const order = await this.ordersRepository.findOne({
+    where: { id: orderId },
+    relations: ['orderDetail'],
+  });
 
-  async createOrderWithPayment(newOrder: CreateOrderDto) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      const order = new Order();
-      order.user = { id: newOrder.userId } as any;
-      order.status = OrderStatus.PENDING;
-
-      const orderDetail = new OrderDetail();
-      orderDetail.price = 0;
-      let total = 0;
-
-      const savedOrder = await queryRunner.manager.save(Order, order);
-      orderDetail.order = savedOrder;
-      const savedOrderDetail = await queryRunner.manager.save(OrderDetail, orderDetail);
-
-      for (const item of newOrder.products) {
-        const product = await queryRunner.manager.findOne(Product, {
-          where: { id: item.productId }
-        });
-
-        if (!product) throw new NotFoundException(`Producto ${item.productId} no encontrado`);
-        if (!product.isActive) throw new ConflictException(`El producto ${product.name} no está disponible actualmente`);
-        if (product.stock < item.quantity) throw new ConflictException(`Stock insuficiente para ${product.name}`);
-
-        const orderItem = new OrderDetailProduct();
-        orderItem.product = product;
-        orderItem.quantity = item.quantity;
-        orderItem.priceAtPurchase = product.price;
-        orderItem.orderDetail = savedOrderDetail;
-
-        await queryRunner.manager.save(OrderDetailProduct, orderItem);
-
-        total += product.price * item.quantity;
-        product.stock -= item.quantity;
-        await queryRunner.manager.save(Product, product);
-      }
-
-      savedOrderDetail.price = total;
-      await queryRunner.manager.save(OrderDetail, savedOrderDetail);
-
-      const paypalOrder = await this.paypalService.createOrder(total, 'USD');
-      const approveLink = paypalOrder.links.find(link => link.rel === 'approve');
-
-      savedOrder.paypalData = {
-        orderId: paypalOrder.id
-      };
-      await queryRunner.manager.save(Order, savedOrder);
-
-      await queryRunner.commitTransaction();
-
-      const itemsWithProducts = await this.orderItemRepository.find({
-        where: { orderDetail: { id: savedOrderDetail.id } },
-        relations: ['product']
-      });
-
-      return {
-        success: true,
-        orderId: savedOrder.id,
-        paypalId: paypalOrder.id,
-        total,
-        redirectUrl: approveLink?.href,
-        items: itemsWithProducts.map(item => ({
-          productId: item.product.id,
-          name: item.product.name,
-          quantity: item.quantity,
-          price: item.priceAtPurchase
-        }))
-      };
-
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw new InternalServerErrorException(`Error al crear orden: ${error.message}`);
-    } finally {
-      await queryRunner.release();
-    }
+  if (!order) throw new NotFoundException('Orden no encontrada');
+  if (order.status !== OrderStatus.PENDING) {
+    throw new ConflictException('La orden no está en estado válido para pagar');
   }
+
+  const total = order.orderDetail.price;
+  const paypalOrder = await this.paypalService.createOrder(total, 'USD');
+  const approveLink = paypalOrder.links.find(link => link.rel === 'approve');
+
+  order.paypalData = { orderId: paypalOrder.id };
+  await this.ordersRepository.save(order);
+
+  return {
+    paypalOrderId: paypalOrder.id,
+    redirectUrl: approveLink?.href,
+  };
+}
 
   async capturePayPalOrder(captureDto: PayPalCaptureDto) {
     const paypalResult = await this.paypalService.captureOrder(captureDto.orderId);

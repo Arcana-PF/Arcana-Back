@@ -13,8 +13,8 @@ export class ProductDTO {
     @IsNumber()
     price: number;
     
-    @IsBoolean()
-    stock: boolean;
+    @IsNumber()
+    stock: number;
     
     @IsString()
     imgUrl: string;
