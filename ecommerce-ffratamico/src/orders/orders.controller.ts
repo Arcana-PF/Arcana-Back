@@ -28,14 +28,20 @@ export class OrdersController {
     private readonly carritoService: CartService,
   ) {}
 
-@Post()
+@Post('paypal/create')
 @UseGuards(AuthGuard)
-async createOrder(@Req() req) {
+async createOrderWithPayment(@Req() req) {
   const userId = req.user?.id;
   if (!userId) throw new ForbiddenException('Usuario no autenticado');
-
   return this.carritoService.createOrderFromCart(userId);
 }
+
+@Post('paypal/initiate/:orderId')
+@UseGuards(AuthGuard)
+async initiatePayPalPayment(@Param('orderId') orderId: string) {
+  return this.ordersService.initiatePayPalForOrder(orderId);
+}
+
 
   @Get()
   @UseGuards(AuthGuard, IsAdminGuard)
