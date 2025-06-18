@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, Query, UseGuards, Patch, Req } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -6,6 +6,7 @@ import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { IdParamDTO } from 'src/OthersDtos/id-param.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsAdminGuard } from 'src/auth/guard/is-admin/isAdmin.guard';
+import { RateProductDto } from './dto/rate-product.dto';
 
 @ApiTags('Products')
 @Controller('products')
@@ -45,9 +46,15 @@ export class ProductsController {
     return await this.productsService.addProductsSeeder();
   }
 
-  @Post('rating/:id')
-  async addRating(){
-    
+  @Patch(':id/rating')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  async rateProduct(
+    @Param() param: IdParamDTO,
+    @Body() rating: RateProductDto,
+    @Req() req
+  ) {
+    return this.productsService.rateProduct(req.user.id, param.id, rating.score);
   }
 
   @Delete(':id')

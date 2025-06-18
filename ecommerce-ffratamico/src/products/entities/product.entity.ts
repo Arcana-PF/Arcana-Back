@@ -1,6 +1,7 @@
 // src/products/entities/product.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { Category } from '../../categories/entities/categories.entity';
+import { ProductRating } from './productRating.entity';
 
 @Entity({ name: 'products' })
 export class Product {
@@ -28,7 +29,10 @@ export class Product {
   @Column({default: 0})
   quantity: number;
 
-  @Column({nullable: true})
+  @OneToMany(() => ProductRating, rating => rating.product)
+  ratings: ProductRating[];
+
+  @Column({ nullable: true })
   rating: number;
 
   @ManyToMany(() => Category, (category) => category.products, { eager: true })
