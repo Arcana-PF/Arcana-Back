@@ -47,6 +47,7 @@ export class ProductsController {
   }
 
   @Patch(':id/rating')
+  @ApiBearerAuth()
   @UseGuards(AuthGuard)
   async rateProduct(
     @Param() param: IdParamDTO,
