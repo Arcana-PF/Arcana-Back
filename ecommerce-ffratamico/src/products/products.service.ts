@@ -36,8 +36,8 @@ export class ProductsService {
     return await this.productsRepository.updateProduct(id, updateProduct);
   }
 
-  rateProduct(id: any, id1: string, score: number) {
-    throw new Error('Method not implemented.');
+  async rateProduct(userId: string, productId: string, score: number) {
+  return await this.productsRepository.rateProduct(userId, productId, score);
   }
 
 }

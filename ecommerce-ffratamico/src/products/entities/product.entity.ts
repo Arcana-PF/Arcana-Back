@@ -32,7 +32,7 @@ export class Product {
   @OneToMany(() => ProductRating, rating => rating.product)
   ratings: ProductRating[];
 
-  @Column({ nullable: true, type: 'float' }) // rating promedio
+  @Column({ nullable: true })
   rating: number;
 
   @ManyToMany(() => Category, (category) => category.products, { eager: true })

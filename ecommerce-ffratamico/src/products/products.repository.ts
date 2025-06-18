@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,12 +10,17 @@ import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
 import { CategoryRepository } from 'src/categories/categories.repository';
 import { MockProducts } from './mock/mock.products.data';
-
+import { User } from 'src/users/entities/user.entity';
+import { ProductRating } from './entities/productRating.entity';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class ProductsRepository {
-
-  constructor(@InjectRepository(Product) private repository: Repository<Product>, private readonly categoryRepository: CategoryRepository){}
+  constructor(
+    @InjectRepository(Product) private repository: Repository<Product>,
+    private readonly categoryRepository: CategoryRepository,
+    private readonly dataSource: DataSource 
+  ) {}
 
   private readonly mockProducts = MockProducts;
 
@@ -24,17 +33,20 @@ export class ProductsRepository {
           price: product.price,
           stock: product.stock,
           imgUrl: product.imgUrl,
-          categoryNames: product.categoryNames
+          categoryNames: product.categoryNames,
         };
 
         await this.createProduct(createProductDto);
         console.log(`✅ Producto "${product.name}" creado con éxito.`);
-
       } catch (error) {
         if (error instanceof ConflictException) {
-          console.warn(`⚠️ El producto "${product.name}" ya existe. Se omitió.`);
+          console.warn(
+            `⚠️ El producto "${product.name}" ya existe. Se omitió.`,
+          );
         } else if (error instanceof NotFoundException) {
-          console.warn(`⚠️ Categoría "${product.categoryNames}" no encontrada. Se omitió el producto "${product.name}".`);
+          console.warn(
+            `⚠️ Categoría "${product.categoryNames}" no encontrada. Se omitió el producto "${product.name}".`,
+          );
         } else {
           throw error;
         }
@@ -54,29 +66,30 @@ export class ProductsRepository {
   }
 
   async getProductById(id: string) {
-    const product= await this.repository.findOne({where: {id}});
-    if(!product) throw new NotFoundException("El id del producto no existe")
+    const product = await this.repository.findOne({ where: { id } });
+    if (!product) throw new NotFoundException('El id del producto no existe');
     return product;
   }
 
   async createProduct(createProductDto: CreateProductDto) {
     // Normalizamos todos los nombres de categorías que vienen del DTO
-    const normalizedCategoryNames = createProductDto.categoryNames.map(name =>
-      this.normalize(name)
+    const normalizedCategoryNames = createProductDto.categoryNames.map((name) =>
+      this.normalize(name),
     );
 
     // Obtenemos todas las categorías de la base de datos
-    const allCategoriesFromDatabase = await this.categoryRepository.getCategories();
+    const allCategoriesFromDatabase =
+      await this.categoryRepository.getCategories();
 
     // Filtramos solo las categorías que coincidan por nombre normalizado
-    const matchedCategories = allCategoriesFromDatabase.filter(dbCategory =>
-      normalizedCategoryNames.includes(this.normalize(dbCategory.name))
+    const matchedCategories = allCategoriesFromDatabase.filter((dbCategory) =>
+      normalizedCategoryNames.includes(this.normalize(dbCategory.name)),
     );
 
     // Validamos que todas las categorías del DTO existan
     if (matchedCategories.length !== normalizedCategoryNames.length) {
       throw new NotFoundException(
-        `Una o más categorías no existen: ${createProductDto.categoryNames.join(', ')}`
+        `Una o más categorías no existen: ${createProductDto.categoryNames.join(', ')}`,
       );
     }
 
@@ -86,11 +99,14 @@ export class ProductsRepository {
     });
 
     if (existingProductWithSameName) {
-      throw new ConflictException(`Ya existe un producto con el nombre "${createProductDto.name}"`);
+      throw new ConflictException(
+        `Ya existe un producto con el nombre "${createProductDto.name}"`,
+      );
     }
 
     // Extraemos categoryNames para que no se pase al crear el producto
-    const { categoryNames, ...productDataWithoutCategoryNames } = createProductDto;
+    const { categoryNames, ...productDataWithoutCategoryNames } =
+      createProductDto;
 
     // Creamos el producto asociando múltiples categorías
     const newProductToSave = this.repository.create({
@@ -107,12 +123,12 @@ export class ProductsRepository {
     const exists = await this.repository.findOne({ where: { id } });
 
     if (!exists) {
-      throw new NotFoundException("El producto que desea borrar no existe");
+      throw new NotFoundException('El producto que desea borrar no existe');
     }
 
     // 🔁 Verificamos si ya está desactivado
     if (!exists.isActive) {
-      throw new ConflictException("El producto ya está desactivado");
+      throw new ConflictException('El producto ya está desactivado');
     }
 
     // ✅ Borrado lógico: seteamos isActive en false
@@ -133,16 +149,17 @@ export class ProductsRepository {
       relations: ['categories'],
     });
 
-    if (!exists) throw new NotFoundException('El producto que desea modificar no existe');
+    if (!exists)
+      throw new NotFoundException('El producto que desea modificar no existe');
 
     // ✅ NUEVO BLOQUE: actualizar categorías si vienen en el DTO
     if (updateProductDto.categoryNames) {
       const allCategories = await this.categoryRepository.getCategories();
 
-      const matchedCategories = allCategories.filter(cat =>
+      const matchedCategories = allCategories.filter((cat) =>
         updateProductDto.categoryNames.some(
-          name => this.normalize(cat.name) === this.normalize(name)
-        )
+          (name) => this.normalize(cat.name) === this.normalize(name),
+        ),
       );
 
       if (matchedCategories.length !== updateProductDto.categoryNames.length) {
@@ -165,12 +182,56 @@ export class ProductsRepository {
     return updated;
   }
 
-  private normalize(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-    .toLowerCase();
-}
+  // src/products/products.repository.ts
 
+  async rateProduct(
+    userId: string,
+    productId: string,
+    score: number,
+  ): Promise<Product> {
+    const product = await this.repository.findOne({
+      where: { id: productId },
+      relations: ['ratings'],
+    });
+    if (!product) throw new NotFoundException('Producto no encontrado');
+
+    const user = await this.dataSource
+      .getRepository(User)
+      .findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const ratingRepo = this.dataSource.getRepository(ProductRating);
+
+    let existingRating = await ratingRepo.findOne({
+      where: { user: { id: userId }, product: { id: productId } },
+      relations: ['product', 'user'],
+    });
+
+    if (existingRating) {
+      existingRating.score = score;
+      await ratingRepo.save(existingRating);
+    } else {
+      const newRating = ratingRepo.create({ user, product, score });
+      await ratingRepo.save(newRating);
+      product.ratings.push(newRating);
+    }
+
+    // recalcular promedio
+    const allRatings = await ratingRepo.find({
+      where: { product: { id: productId } },
+    });
+    const avg =
+      allRatings.reduce((acc, r) => acc + r.score, 0) / allRatings.length;
+
+    product.rating = parseFloat(avg.toFixed(2));
+    return await this.repository.save(product);
+  }
+
+  private normalize(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+  }
 }
