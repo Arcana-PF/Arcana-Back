@@ -10,16 +10,17 @@ import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
 import { CategoryRepository } from 'src/categories/categories.repository';
 import { MockProducts } from './mock/mock.products.data';
-import { User } from 'src/users/entities/user.entity';
 import { ProductRating } from './entities/productRating.entity';
-import { DataSource } from 'typeorm';
+import { UserRepository } from 'src/users/users.repository';
 
 @Injectable()
 export class ProductsRepository {
   constructor(
     @InjectRepository(Product) private repository: Repository<Product>,
+    @InjectRepository(ProductRating)
+    private readonly ratingRepository: Repository<ProductRating>,
     private readonly categoryRepository: CategoryRepository,
-    private readonly dataSource: DataSource 
+    private readonly userRepository: UserRepository
   ) {}
 
   private readonly mockProducts = MockProducts;
@@ -188,36 +189,34 @@ export class ProductsRepository {
     userId: string,
     productId: string,
     score: number,
-  ): Promise<Product> {
+    ): Promise<Product> {
     const product = await this.repository.findOne({
       where: { id: productId },
       relations: ['ratings'],
     });
     if (!product) throw new NotFoundException('Producto no encontrado');
 
-    const user = await this.dataSource
-      .getRepository(User)
-      .findOne({ where: { id: userId } });
-    if (!user) throw new NotFoundException('Usuario no encontrado');
+    const user = await this.userRepository.getById(userId);
 
-    const ratingRepo = this.dataSource.getRepository(ProductRating);
-
-    let existingRating = await ratingRepo.findOne({
-      where: { user: { id: userId }, product: { id: productId } },
-      relations: ['product', 'user'],
+    let existingRating = await this.ratingRepository.findOne({
+    where: {
+      user: { id: userId },
+      product: { id: productId },
+    },
+    relations: ['product', 'user'],
     });
 
     if (existingRating) {
       existingRating.score = score;
-      await ratingRepo.save(existingRating);
+      await this.ratingRepository.save(existingRating);
     } else {
-      const newRating = ratingRepo.create({ user, product, score });
-      await ratingRepo.save(newRating);
+      const newRating = this.ratingRepository.create({ user, product, score });
+      await this.ratingRepository.save(newRating);
       product.ratings.push(newRating);
     }
 
     // recalcular promedio
-    const allRatings = await ratingRepo.find({
+    const allRatings = await this.ratingRepository.find({
       where: { product: { id: productId } },
     });
     const avg =
