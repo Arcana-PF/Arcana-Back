@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { UpdateUserDTO } from "./dto/update-user.dto";
 import { InjectRepository } from "@nestjs/typeorm";
