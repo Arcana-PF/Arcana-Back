@@ -44,7 +44,7 @@ async initiatePayPalPayment(@Param('orderId') orderId: string) {
 
 
   @Get()
-  @UseGuards(AuthGuard, IsAdminGuard)
+  @UseGuards(AuthGuard)
   async findAll() {
     return await this.ordersService.findAll();
   }
@@ -57,7 +57,7 @@ async initiatePayPalPayment(@Param('orderId') orderId: string) {
 
   
   @Get(':id')
-  @UseGuards(AuthGuard, IsAdminGuard)
+  @UseGuards(AuthGuard)
   async getOrderDetails(@Param('id') orderId: string) {
     return this.ordersService.getOrderDetails(orderId);
   }
