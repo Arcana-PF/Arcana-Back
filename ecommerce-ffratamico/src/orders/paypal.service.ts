@@ -1,4 +1,4 @@
-// src/orders/paypal.service.ts
+
 import { Injectable } from '@nestjs/common';
 import * as paypal from '@paypal/checkout-server-sdk';
 
@@ -18,7 +18,7 @@ export class PayPalService {
     request.requestBody({
       intent: 'CAPTURE',
       purchase_units: [{
-        amount: { currency_code: currency, value: amount.toFixed(2) },
+        amount: { currency_code: currency, value: Number(amount).toFixed(2) },
       }],
     });
 

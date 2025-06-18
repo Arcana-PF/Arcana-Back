@@ -45,7 +45,7 @@ async initiatePayPalForOrder(orderId: string) {
     throw new ConflictException('La orden no está en estado válido para pagar');
   }
 
-  const total = order.orderDetail.price;
+  const total = Number(order.orderDetail.price);
   const paypalOrder = await this.paypalService.createOrder(total, 'USD');
   const approveLink = paypalOrder.links.find(link => link.rel === 'approve');
 
@@ -114,7 +114,7 @@ const emailHtml = `
       </tbody>
     </table>
 
-    <p style="margin-top: 20px;"><strong>Total pagado:</strong> $${order.orderDetail.price.toFixed(2)}</p>
+    <p style="margin-top: 20px;"><strong>Total pagado:</strong> $${Number(order.orderDetail.price).toFixed(2)}</p>
 
     <p style="margin-top: 30px;">Saludos,<br><strong>Equipo de Arcana</strong></p>
     <hr style="margin-top: 40px;" />
