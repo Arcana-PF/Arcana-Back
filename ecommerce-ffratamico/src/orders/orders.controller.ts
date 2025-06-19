@@ -19,9 +19,11 @@ import { PayPalCaptureDto } from './dto/paypal-capture.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsAdminGuard } from 'src/auth/guard/is-admin/isAdmin.guard';
 import { CartService } from 'src/carrito/cart.service';
+import { Auth0Guard } from 'src/auth/guard/auth0/auth0.guard';
 
 @ApiBearerAuth()
 @ApiTags('Orders')
+@UseGuards(Auth0Guard)
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService,
@@ -29,7 +31,7 @@ export class OrdersController {
   ) {}
 
   @Post('paypal/create')
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async createOrderWithPayment(@Req() req) {
     const userId = req.user?.id;
     if (!userId) throw new ForbiddenException('Usuario no autenticado');
@@ -37,40 +39,40 @@ export class OrdersController {
   }
 
   @Post('paypal/initiate/:orderId')
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async initiatePayPalPayment(@Param('orderId') orderId: string) {
     return this.ordersService.initiatePayPalForOrder(orderId);
   }
 
 
   @Get()
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async findAll() {
     return await this.ordersService.findAll();
   }
 
   @Post('paypal/capture')
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async capturePayPalOrder(@Body() captureDto: PayPalCaptureDto) {
     return this.ordersService.capturePayPalOrder(captureDto);
   }
 
   
   @Get(':id')
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async getOrderDetails(@Param('id') orderId: string) {
     return this.ordersService.getOrderDetails(orderId);
   }
 
 
   @Patch(':id')
-  @UseGuards(AuthGuard, IsAdminGuard)
+  // @UseGuards(AuthGuard, IsAdminGuard)
   async update(@Param() param: IdParamDTO, @Body() updateOrderDto: UpdateOrderDto) {
     return await this.ordersService.update(param.id, updateOrderDto);
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async remove(@Param() param: IdParamDTO) {
     return await this.ordersService.remove(param.id);
   }
