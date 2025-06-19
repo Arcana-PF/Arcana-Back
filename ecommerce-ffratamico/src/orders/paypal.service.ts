@@ -17,6 +17,10 @@ export class PayPalService {
     const request = new paypal.orders.OrdersCreateRequest();
     request.requestBody({
       intent: 'CAPTURE',
+      application_context: {
+      return_url: 'https://arcana-front-9ej2.vercel.app', // 👉 URL a la que PayPal redirige si el pago se confirma
+      cancel_url: 'https://arcana-front-9ej2.vercel.app',   // 👉 URL a la que PayPal redirige si se cancela
+      },
       purchase_units: [{
         amount: { currency_code: currency, value: Number(amount).toFixed(2) },
       }],

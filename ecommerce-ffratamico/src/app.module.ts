@@ -41,7 +41,7 @@ import { MailModule } from './mail/mail.module';
       global: true,
       signOptions: {expiresIn: '1h'},
       secret: process.env.JWT_SECRET
-    })
+    }),
   ],
   controllers: [],
   providers: [CloudinaryService],
