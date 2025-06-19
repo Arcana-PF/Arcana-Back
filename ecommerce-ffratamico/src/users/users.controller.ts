@@ -16,6 +16,7 @@ import { IdParamDTO } from 'src/OthersDtos/id-param.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsAdminGuard } from 'src/auth/guard/is-admin/isAdmin.guard';
 import { IsUserGuard } from 'src/auth/guard/is-user/is-user.guard';
+import { Auth0Guard } from 'src/auth/guard/auth0/auth0.guard';
 
 @ApiBearerAuth()
 @ApiTags('Users')
@@ -24,13 +25,14 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
+  // @UseGuards(AuthGuard, IsAdminGuard)
+  @UseGuards(Auth0Guard)
   async getAllUsers() {
     return await this.usersService.getAll();
   }
 
   @Get('page')
-  @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
+  @UseGuards(AuthGuard, IsAdminGuard)
   async getUsersWithPagination(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 5,

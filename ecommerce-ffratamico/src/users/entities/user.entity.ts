@@ -32,7 +32,7 @@ export class User {
   isActive: boolean
 
   @OneToMany(() => Cart, (cart) => cart.user)
-   carts: Cart[];
+  carts: Cart[];
 
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
