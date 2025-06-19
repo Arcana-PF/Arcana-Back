@@ -18,8 +18,8 @@ export class PayPalService {
     request.requestBody({
       intent: 'CAPTURE',
       application_context: {
-      return_url: 'https://arcana-front-9ej2.vercel.app', // 👉 URL a la que PayPal redirige si el pago se confirma
-      cancel_url: 'https://arcana-front-9ej2.vercel.app',   // 👉 URL a la que PayPal redirige si se cancela
+      return_url: 'http://localhost:3000/cart/successpage', // 👉 URL a la que PayPal redirige si el pago se confirma
+      cancel_url: 'http://localhost:3000/cart/canceledpage',   // 👉 URL a la que PayPal redirige si se cancela
       },
       purchase_units: [{
         amount: { currency_code: currency, value: Number(amount).toFixed(2) },
