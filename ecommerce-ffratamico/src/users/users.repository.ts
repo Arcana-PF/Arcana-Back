@@ -64,13 +64,13 @@ export class UserRepository{
 
     async updateUser(id: string, updateUser: UpdateUserDTO) {
         // Buscamos solo usuarios activos
-        const user = await this.repository.findOne({ where: { id, isActive: true } }); // ← agregado isActive: true
+        const user = await this.repository.findOne({ where: { id, isActive: true } });
 
         if (!user) {
-            throw new NotFoundException('El usuario no existe o está inactivo'); // ← mensaje más claro
+            throw new NotFoundException('El usuario no existe o está inactivo'); 
         }
 
-        Object.assign(user, updateUser); // ← nombre más representativo que "exists"
+        Object.assign(user, updateUser);
 
         await this.repository.save(user);
 
@@ -84,7 +84,7 @@ export class UserRepository{
             phone: user.phone,
             isAdmin: user.isAdmin,
             isActive: user.isActive,
-            }, // ← opcional: devolver los datos actualizados (sin password)
+            },
         };
     }
 
