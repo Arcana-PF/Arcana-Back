@@ -20,19 +20,19 @@ import { Auth0Guard } from 'src/auth/guard/auth0/auth0.guard';
 
 @ApiBearerAuth()
 @ApiTags('Users')
+@UseGuards(Auth0Guard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
   // @UseGuards(AuthGuard, IsAdminGuard)
-  @UseGuards(Auth0Guard)
   async getAllUsers() {
     return await this.usersService.getAll();
   }
 
   @Get('page')
-  @UseGuards(AuthGuard, IsAdminGuard)
+  // @UseGuards(AuthGuard, IsAdminGuard)
   async getUsersWithPagination(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 5,
@@ -41,19 +41,19 @@ export class UsersController {
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
+  // @UseGuards(AuthGuard, IsAdminGuard) 
   async getUserById(@Param() param: IdParamDTO) {
     return await this.usersService.getUserById(param.id);
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard, IsUserGuard) // Header de autorizacion
+  // @UseGuards(AuthGuard, IsUserGuard) 
   async deleteUser(@Param() param: IdParamDTO) {
     return await this.usersService.deleteUser(param.id);
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard) // Header de autorizacion
+  // @UseGuards(AuthGuard) 
   async updateUser(
     @Param() param: IdParamDTO,
     @Body() updateUser: UpdateUserDTO,
