@@ -23,7 +23,7 @@ import { Auth0Guard } from 'src/auth/guard/auth0/auth0.guard';
 
 @ApiBearerAuth()
 @ApiTags('Orders')
-@UseGuards(Auth0Guard)
+@UseGuards(AuthGuard)
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService,
@@ -31,7 +31,6 @@ export class OrdersController {
   ) {}
 
   @Post('paypal/create')
-  // @UseGuards(AuthGuard)
   async createOrderWithPayment(@Req() req) {
     const userId = req.user?.id;
     if (!userId) throw new ForbiddenException('Usuario no autenticado');
@@ -39,40 +38,35 @@ export class OrdersController {
   }
 
   @Post('paypal/initiate/:orderId')
-  // @UseGuards(AuthGuard)
   async initiatePayPalPayment(@Param('orderId') orderId: string) {
     return this.ordersService.initiatePayPalForOrder(orderId);
   }
 
 
   @Get()
-  // @UseGuards(AuthGuard)
   async findAll() {
     return await this.ordersService.findAll();
   }
 
   @Post('paypal/capture')
-  // @UseGuards(AuthGuard)
   async capturePayPalOrder(@Body() captureDto: PayPalCaptureDto) {
     return this.ordersService.capturePayPalOrder(captureDto);
   }
 
   
   @Get(':id')
-  // @UseGuards(AuthGuard)
   async getOrderDetails(@Param('id') orderId: string) {
     return this.ordersService.getOrderDetails(orderId);
   }
 
 
   @Patch(':id')
-  // @UseGuards(AuthGuard, IsAdminGuard)
+  @UseGuards(IsAdminGuard)
   async update(@Param() param: IdParamDTO, @Body() updateOrderDto: UpdateOrderDto) {
     return await this.ordersService.update(param.id, updateOrderDto);
   }
 
   @Delete(':id')
-  // @UseGuards(AuthGuard)
   async remove(@Param() param: IdParamDTO) {
     return await this.ordersService.remove(param.id);
   }

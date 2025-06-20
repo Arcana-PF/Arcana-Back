@@ -24,4 +24,16 @@ export class AuthController {
   logIn(@Body() Credentials: SignInAuthDTO) {
     return this.authService.signIn(Credentials);
   }
+
+  @Post('google-login')
+  signIn(@Body() email: string){
+    return {
+      "validationToken": "...",
+      "user": {
+      "id": "...",
+      "name": "...",
+      "email": "...",
+      }
+    }
+  }
 }
