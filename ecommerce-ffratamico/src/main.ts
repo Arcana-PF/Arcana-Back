@@ -15,6 +15,11 @@ async function bootstrap() {
     transform: true,  //esta validacion transforma los datos que entran al tipo que espera el DTO, ej de string a number
   }));
 
+   app.enableCors({
+    origin: ['https://arcana-front-9ej2.vercel.app/'], // Cambiá esto por tu dominio de Vercel real
+    credentials: true, 
+  });
+
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Arcana')
     .setDescription('Back-end de la base de datos de Arcana')
