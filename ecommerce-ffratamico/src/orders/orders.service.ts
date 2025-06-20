@@ -1,4 +1,4 @@
-import {ConflictException,Injectable,InternalServerErrorException,NotFoundException} from '@nestjs/common';
+import {ConflictException,Injectable,InternalServerErrorException,NotFoundException, UnprocessableEntityException} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Order } from './entities/order.entity';
@@ -34,33 +34,52 @@ export class OrdersService {
     private readonly mailService: MailService,
   ) {}
 
-async initiatePayPalForOrder(orderId: string) {
-  const order = await this.ordersRepository.findOne({
-    where: { id: orderId },
-    relations: ['orderDetail'],
-  });
+  async initiatePayPalForOrder(orderId: string) {
+    const order = await this.ordersRepository.findOne({
+      where: { id: orderId },
+      relations: ['orderDetail'],
+    });
 
-  if (!order) throw new NotFoundException('Orden no encontrada');
-  if (order.status !== OrderStatus.PENDING) {
-    throw new ConflictException('La orden no está en estado válido para pagar');
+    if (!order) throw new NotFoundException('Orden no encontrada');
+    if (order.status !== OrderStatus.PENDING) {
+      throw new ConflictException('La orden no está en estado válido para pagar');
+    }
+
+    const total = Number(order.orderDetail.price);
+    const paypalOrder = await this.paypalService.createOrder(total, 'USD');
+    const approveLink = paypalOrder.links.find(link => link.rel === 'approve');
+
+    order.paypalData = { orderId: paypalOrder.id };
+    await this.ordersRepository.save(order);
+
+    return {
+      paypalOrderId: paypalOrder.id,
+      redirectUrl: approveLink?.href,
+    };
   }
 
-  const total = Number(order.orderDetail.price);
-  const paypalOrder = await this.paypalService.createOrder(total, 'USD');
-  const approveLink = paypalOrder.links.find(link => link.rel === 'approve');
-
-  order.paypalData = { orderId: paypalOrder.id };
-  await this.ordersRepository.save(order);
-
-  return {
-    paypalOrderId: paypalOrder.id,
-    redirectUrl: approveLink?.href,
-  };
-}
-
   async capturePayPalOrder(captureDto: PayPalCaptureDto) {
-    const paypalResult = await this.paypalService.captureOrder(captureDto.orderId);
+    let paypalResult: any;
 
+    // 🔹 MODIFICACIÓN 1: intentar capturar el pago, y si ya fue capturado, obtener los detalles
+    try {
+      paypalResult = await this.paypalService.captureOrder(captureDto.orderId);
+    } catch (error) {
+      const parsed = JSON.parse(error.message);
+
+      const alreadyCaptured = parsed?.details?.some(
+        (detail) => detail.issue === 'ORDER_ALREADY_CAPTURED'
+      );
+
+      if (alreadyCaptured) {
+        // 🔹 MODIFICACIÓN 2: si ya fue capturado, obtener los detalles actuales de la orden
+        paypalResult = await this.paypalService.getOrderDetails(captureDto.orderId);
+      } else {
+        throw new UnprocessableEntityException(parsed);
+      }
+    }
+
+    // 🔹 MODIFICACIÓN 3: validar que el estado sea COMPLETED
     if (paypalResult.status !== 'COMPLETED') {
       throw new ConflictException('El pago no se completó correctamente en PayPal');
     }
@@ -84,14 +103,14 @@ async initiatePayPalForOrder(orderId: string) {
 
     const order = await this.ordersRepository.findOne({
       where: { id: captureDto.localOrderId },
-      relations: ['orderDetail', 'orderDetail.items', 'orderDetail.items.product']
+      relations: ['user','orderDetail', 'orderDetail.items', 'orderDetail.items.product']
     });
 
-      const itemsHtml = order.orderDetail.items.map(item => `
+    const itemsHtml = order.orderDetail.items.map(item => `
       <tr>
         <td style="padding: 8px; border: 1px solid #ccc;">${item.product.name}</td>
         <td style="padding: 8px; border: 1px solid #ccc;">${item.quantity}</td>
-        <td style="padding: 8px; border: 1px solid #ccc;">$${item.priceAtPurchase.toFixed(2)}</td>
+        <td style="padding: 8px; border: 1px solid #ccc;">$${Number(item.priceAtPurchase).toFixed(2)}</td>
       </tr>
     `).join('');
 
@@ -128,7 +147,6 @@ async initiatePayPalForOrder(orderId: string) {
       emailHtml
     );
 
-    // RETURN FINAL
     return {
       success: true,
       orderId: order.id,

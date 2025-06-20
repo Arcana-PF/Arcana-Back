@@ -38,4 +38,10 @@ export class PayPalService {
     const response = await this.client.execute(request);
     return response.result;
   }
+
+  async getOrderDetails(orderId: string): Promise<any> {
+  const request = new paypal.orders.OrdersGetRequest(orderId);
+  const response = await this.client.execute(request);
+  return response.result;
+  }
 }
