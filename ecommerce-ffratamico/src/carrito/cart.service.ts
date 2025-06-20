@@ -207,7 +207,7 @@ export class CartService {
       savedOrderDetail.price = total;
       await queryRunner.manager.save(OrderDetail, savedOrderDetail);
 
-      const paypalOrder = await this.paypalService.createOrder(total, 'USD');
+      const paypalOrder = await this.paypalService.createOrder(total, 'USD', savedOrder.id);
       const approveLink = paypalOrder.links.find(link => link.rel === 'approve');
 
       savedOrder.paypalData = {
@@ -220,7 +220,7 @@ export class CartService {
       await queryRunner.manager.save(Cart, cart);
 
       await queryRunner.commitTransaction();
-
+    
       return {
         success: true,
         localOrderId: savedOrder.id,

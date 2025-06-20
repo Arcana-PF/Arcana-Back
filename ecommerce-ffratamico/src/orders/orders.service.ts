@@ -53,7 +53,7 @@ export class OrdersService {
     const total = Number(order.orderDetail.price);
 
     // Crear la orden en PayPal
-    const paypalOrder = await this.paypalService.createOrder(total, 'USD');
+    const paypalOrder = await this.paypalService.createOrder(total, 'USD', order.id);
     const approveLink = paypalOrder.links.find(link => link.rel === 'approve');
 
     if (!approveLink?.href) {
@@ -65,9 +65,11 @@ export class OrdersService {
     await this.ordersRepository.save(order);
 
     // Log opcional para trazabilidad
-    this.logger?.log?.(
+    this.logger.log?.(
       `🧾 Orden PayPal creada (localId=${order.id}, paypalId=${paypalOrder.id}) por $${total}`
     );
+
+
 
     return {
       paypalOrderId: paypalOrder.id,
