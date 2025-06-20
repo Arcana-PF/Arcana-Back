@@ -77,6 +77,16 @@ export class OrdersService {
     };
   }
 
+   async getOrdersByUserId(userId: string) {
+    const orders = await this.ordersRepositoryCustom.getOrdersByUserId(userId);
+
+    if (!orders || orders.length === 0) {
+      throw new NotFoundException(`No se encontraron órdenes para el usuario ${userId}`);
+    }
+
+    return orders;
+  }
+
   async capturePayPalOrder(captureDto: PayPalCaptureDto) {
     let paypalResult: any;
 
