@@ -54,7 +54,13 @@ export class OrdersController {
   async capturePayPalOrder(@Body() captureDto: PayPalCaptureDto) {
     return this.ordersService.capturePayPalOrder(captureDto);
   }
-
+ @Get('myOrders')
+  @UseGuards(AuthGuard)
+  async getOrdersForCurrentUser(@Req() req) {
+    const userId = req.user?.id;
+    if (!userId) throw new ForbiddenException('Usuario no autenticado');
+    return this.ordersService.getOrdersByUserId(userId);
+  }
   
   @Get(':id')
   @UseGuards(AuthGuard)
