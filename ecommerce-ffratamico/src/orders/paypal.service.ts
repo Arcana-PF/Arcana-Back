@@ -13,12 +13,14 @@ export class PayPalService {
     this.client = new paypal.core.PayPalHttpClient(environment);
   }
 
-  async createOrder(amount: number, currency: string): Promise<{ id: string; links: any[] }> {
+  async createOrder(amount: number, currency: string, localOrderId: string): Promise<{ id: string; links: any[] }> {
     const request = new paypal.orders.OrdersCreateRequest();
+
+
     request.requestBody({
       intent: 'CAPTURE',
       application_context: {
-      return_url: 'http://localhost:3000/cart/successpage', // 👉 URL a la que PayPal redirige si el pago se confirma
+      return_url: `http://localhost:3000/cart/successpage?localOrderId=${localOrderId}`, // 👉 URL a la que PayPal redirige si el pago se confirma
       cancel_url: 'http://localhost:3000/cart/canceledpage',   // 👉 URL a la que PayPal redirige si se cancela
       },
       purchase_units: [{
