@@ -1,4 +1,4 @@
-import {ConflictException,Injectable,InternalServerErrorException,NotFoundException, UnprocessableEntityException} from '@nestjs/common';
+import {ConflictException,Injectable,InternalServerErrorException,Logger,NotFoundException, UnprocessableEntityException} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Order } from './entities/order.entity';
@@ -34,27 +34,44 @@ export class OrdersService {
     private readonly mailService: MailService,
   ) {}
 
+  private readonly logger = new Logger(OrdersService.name)
+
   async initiatePayPalForOrder(orderId: string) {
     const order = await this.ordersRepository.findOne({
       where: { id: orderId },
       relations: ['orderDetail'],
     });
 
-    if (!order) throw new NotFoundException('Orden no encontrada');
+    if (!order) {
+      throw new NotFoundException('Orden no encontrada');
+    }
+
     if (order.status !== OrderStatus.PENDING) {
       throw new ConflictException('La orden no está en estado válido para pagar');
     }
 
     const total = Number(order.orderDetail.price);
+
+    // Crear la orden en PayPal
     const paypalOrder = await this.paypalService.createOrder(total, 'USD');
     const approveLink = paypalOrder.links.find(link => link.rel === 'approve');
 
+    if (!approveLink?.href) {
+      throw new InternalServerErrorException('No se pudo obtener el enlace de aprobación de PayPal');
+    }
+
+    // Guardar el ID generado por PayPal
     order.paypalData = { orderId: paypalOrder.id };
     await this.ordersRepository.save(order);
 
+    // Log opcional para trazabilidad
+    this.logger?.log?.(
+      `🧾 Orden PayPal creada (localId=${order.id}, paypalId=${paypalOrder.id}) por $${total}`
+    );
+
     return {
       paypalOrderId: paypalOrder.id,
-      redirectUrl: approveLink?.href,
+      redirectUrl: approveLink.href,
     };
   }
 
