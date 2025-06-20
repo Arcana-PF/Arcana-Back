@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,11 +8,13 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CategoryRepository } from 'src/categories/categories.repository';
 import { MockProducts } from './mock/mock.products.data';
 import { ProductRating } from './entities/productRating.entity';
 import { UserRepository } from 'src/users/users.repository';
+import { Order } from 'src/orders/entities/order.entity';
+import { OrderStatus } from 'src/orders/enums/order-status.enum';
 
 @Injectable()
 export class ProductsRepository {
@@ -20,7 +23,8 @@ export class ProductsRepository {
     @InjectRepository(ProductRating)
     private readonly ratingRepository: Repository<ProductRating>,
     private readonly categoryRepository: CategoryRepository,
-    private readonly userRepository: UserRepository
+    private readonly userRepository: UserRepository,
+    private readonly dataSource: DataSource
   ) {}
 
   private readonly mockProducts = MockProducts;
@@ -197,6 +201,19 @@ export class ProductsRepository {
     if (!product) throw new NotFoundException('Producto no encontrado');
 
     const user = await this.userRepository.getById(userId);
+
+    const userBoughtProduct = await this.dataSource
+    .createQueryBuilder(Order, 'order')
+    .leftJoin('order.orderDetail', 'detail')
+    .leftJoin('detail.items', 'item')
+    .where('order.user.id = :userId', { userId })
+    .andWhere('order.status = :status', { status: OrderStatus.PAID })
+    .andWhere('item.product.id = :productId', { productId })
+    .getOne();
+
+    if (!userBoughtProduct) {
+      throw new ForbiddenException('Solo podés calificar productos que hayas comprado');
+    }
 
     let existingRating = await this.ratingRepository.findOne({
     where: {
