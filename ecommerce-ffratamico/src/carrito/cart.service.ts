@@ -223,7 +223,7 @@ export class CartService {
 
       return {
         success: true,
-        orderId: savedOrder.id,
+        localOrderId: savedOrder.id,
         paypalId: paypalOrder.id,
         total,
         redirectUrl: approveLink?.href,
