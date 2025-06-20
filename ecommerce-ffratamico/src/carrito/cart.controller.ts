@@ -17,17 +17,15 @@ import { AddItemToCartDto } from './dto/add-item-to-cart.dto';
 import { IdParamDTO } from 'src/OthersDtos/id-param.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 import { ItemIdParamDto } from './dto/item-id-param.dto';
-import { Auth0Guard } from 'src/auth/guard/auth0/auth0.guard';
 
 @ApiBearerAuth()
 @ApiTags('Cart')
-@UseGuards(Auth0Guard)
+@UseGuards(AuthGuard)
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Get()
-  // @UseGuards(AuthGuard)
   async getActiveCart(@Req() req) {
     const userId = req.user?.id;
     if (!userId) throw new ForbiddenException('Usuario no autenticado');
@@ -36,7 +34,6 @@ export class CartController {
   }
 
   @Post('items')
-  // @UseGuards(AuthGuard)
   async addItemToCart(
     @Req() req,
     @Body() items: AddItemToCartDto,
@@ -45,7 +42,6 @@ export class CartController {
   }
 
   @Patch('items/:itemId')
-  // @UseGuards(AuthGuard)
   async updateCartItem(
     @Req() req,
     @Param() item: ItemIdParamDto,
@@ -55,13 +51,11 @@ export class CartController {
   }
 
   @Delete('items/:itemId')
-  // @UseGuards(AuthGuard)
   async removeCartItem(@Req() req, @Param() item: ItemIdParamDto) {
     return this.cartService.removeCartItem(req.user?.id, item.itemId);
   }
 
   @Delete()
-  // @UseGuards(AuthGuard)
   async clearCart(@Req() req) {
     return this.cartService.clearCart(req.user?.id);
   }
