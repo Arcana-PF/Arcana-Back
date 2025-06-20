@@ -88,6 +88,22 @@ export class AuthService {
     };
     const token = this.jwtService.sign(payload);
 
+    await this.mailService.sendEmail(
+    user.email,
+    'Has iniciado sesión en Arcana',
+    `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+      <h2 style="color:rgb(112, 7, 161);">Inicio de sesión exitoso</h2>
+      <p>Hola ${user.name || user.email},</p>
+      <p>Tu cuenta ha sido utilizada para iniciar sesión en nuestra plataforma.</p>
+      <p>Si no fuiste tú, por favor contáctanos de inmediato.</p>
+      <p style="margin-top: 30px;">Saludos,<br><strong>Equipo de Arcana</strong></p>
+      <hr style="margin-top: 40px;" />
+      <small style="color: #888;">Este correo fue enviado automáticamente. Por favor, no respondas.</small>
+    </div>
+    `
+  );
+
     return {
       success: 'Sesión iniciada correctamente',
       validationToken: token,
