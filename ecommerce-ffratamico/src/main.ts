@@ -16,7 +16,9 @@ async function bootstrap() {
   }));
 
    app.enableCors({
-    origin: ['https://arcana-front-9ej2.vercel.app/'], // Cambiá esto por tu dominio de Vercel real
+    origin: ['https://arcana-front-9ej2.vercel.app/,',
+      'http://localhost:3000/',
+    ],
     credentials: true, 
   });
 
