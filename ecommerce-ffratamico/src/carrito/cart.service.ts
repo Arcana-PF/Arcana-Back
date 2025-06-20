@@ -223,8 +223,8 @@ export class CartService {
 
       return {
         success: true,
-        orderId: savedOrder.id,
-        paypalId: paypalOrder.id,
+        localOrderId: savedOrder.id,
+        orderId: paypalOrder.id,
         total,
         redirectUrl: approveLink?.href,
         items: cart.items.map(item => ({
