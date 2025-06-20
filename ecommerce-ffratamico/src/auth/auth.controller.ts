@@ -36,4 +36,9 @@ export class AuthController {
       }
     }
   }
+
+@Post('auth0-login')
+async auth0Login(@Body('token') token: string) {
+  return this.authService.signInWithAuth0(token);
+}
 }
