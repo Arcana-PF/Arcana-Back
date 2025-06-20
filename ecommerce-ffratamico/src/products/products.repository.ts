@@ -193,7 +193,7 @@ export class ProductsRepository {
     userId: string,
     productId: string,
     score: number,
-    ): Promise<Product> {
+    ) {
     const product = await this.repository.findOne({
       where: { id: productId },
       relations: ['ratings'],
@@ -240,7 +240,12 @@ export class ProductsRepository {
       allRatings.reduce((acc, r) => acc + r.score, 0) / allRatings.length;
 
     product.rating = parseFloat(avg.toFixed(2));
-    return await this.repository.save(product);
+    const updatedProduct = await this.repository.save(product);
+    
+    return {
+    "message": 'Gracias por puntuar el producto', // ✅ CAMBIO
+    product: updatedProduct,                    // ✅ CAMBIO
+  };
   }
 
   private normalize(value: string): string {
