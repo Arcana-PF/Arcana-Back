@@ -299,6 +299,28 @@ export class OrdersRepository {
     return order;
   }
 
+  async getOrdersByUserId(userId: string): Promise<Order[]> {
+    try {
+      return await this.repository.find({
+        where: {
+          user: { id: userId },
+          isActive: true,
+        },
+        relations: {
+          user: true,
+          orderDetail: {
+            items: {
+              product: true,
+            },
+          },
+        },
+        order: { date: 'DESC' },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Error al obtener órdenes del usuario');
+    }
+  }
+
   async updateOrderStatus(orderId: string, status: OrderStatus): Promise<void> {
     await this.repository.update(orderId, { status });
   }
