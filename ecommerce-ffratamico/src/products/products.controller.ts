@@ -35,24 +35,21 @@ export class ProductsController {
 
   @Post()
   @ApiBearerAuth()
-  @UseGuards(Auth0Guard)
-  // @UseGuards(AuthGuard, IsAdminGuard)
+  @UseGuards(AuthGuard, IsAdminGuard)
   async create(@Body() newProduct: CreateProductDto) {
     return await this.productsService.createProduct(newProduct);
   }
 
   @Post('seeder')
   @ApiBearerAuth()
-  @UseGuards(Auth0Guard)
-  // @UseGuards(AuthGuard, IsAdminGuard)
+  @UseGuards(AuthGuard, IsAdminGuard)
   async addProductsSeeder(){
     return await this.productsService.addProductsSeeder();
   }
 
   @Patch(':id/rating')
   @ApiBearerAuth()
-  @UseGuards(Auth0Guard)
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   async rateProduct(
     @Param() param: IdParamDTO,
     @Body() rating: RateProductDto,
@@ -63,16 +60,14 @@ export class ProductsController {
 
   @Delete(':id')
   @ApiBearerAuth()
-  @UseGuards(Auth0Guard)
-  // @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
+  @UseGuards(AuthGuard, IsAdminGuard) 
   async remove(@Param() param: IdParamDTO) {
     return await this.productsService.removeProduct(param.id);
   }
 
   @Put(':id')
   @ApiBearerAuth()
-  @UseGuards(Auth0Guard)
-  // @UseGuards(AuthGuard, IsAdminGuard) // Header de autorizacion
+  @UseGuards(AuthGuard, IsAdminGuard)
   async update(@Param() param: IdParamDTO, @Body() updateProduct: UpdateProductDto) {
     return await this.productsService.update(param.id, updateProduct)
   }
