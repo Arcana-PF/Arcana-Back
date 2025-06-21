@@ -11,6 +11,8 @@ import { CloudinaryService } from './services/cloudinary/cloudinary.service';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { JwtModule } from '@nestjs/jwt';
 import { MailModule } from './mail/mail.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { CronEmailModule } from './cron-email/cron-email.module';
 
 
 @Module({
@@ -43,6 +45,8 @@ import { MailModule } from './mail/mail.module';
       signOptions: {expiresIn: '1h'},
       secret: process.env.JWT_SECRET
     }),
+    ScheduleModule.forRoot(),
+    CronEmailModule
   ],
   controllers: [],
   providers: [CloudinaryService],
